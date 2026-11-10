@@ -1,0 +1,40 @@
+{
+  "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+  },
+  "direction": "ida",
+  "destination": "Embarcadero Sur",
+  "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+  },
+  "isScheduled": true,
+  "dayType": "WEEKDAY",
+  "localDate": "2026-11-10",
+  "localTime": "07:03",
+  "timeZone": "America/Bogota",
+  "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+  "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+  "alerts": [
+    {
+      "id": "7d1f0c1e-0000-4000-8000-000000000001",
+      "type": "suspendido",
+      "reason": "nivel_rio",
+      "title": "Servicio suspendido por nivel del río",
+      "message": "El nivel del río Sinú está por debajo del mínimo seguro. El servicio se reanudará cuando baje la alerta.",
+      "scope": "ruta",
+      "until": null
+    }
+  ],
+  "status": "SUSPENDED",
+  "reason": "nivel_rio",
+  "message": "Servicio suspendido por nivel del río",
+  "detail": "El nivel del río Sinú está por debajo del mínimo seguro. El servicio se reanudará cuando baje la alerta.",
+  "suspendedUntil": null
+}

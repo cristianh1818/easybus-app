@@ -1,0 +1,54 @@
+[
+  {
+    "id": "7d1f0c1e-0000-4000-8000-000000000001",
+    "tipo": "suspendido",
+    "motivo": "nivel_rio",
+    "titulo": "Servicio suspendido por nivel del río",
+    "mensaje": "El nivel del río Sinú está por debajo del mínimo seguro. El servicio se reanudará cuando baje la alerta.",
+    "alcance": "ruta",
+    "ruta": {
+      "id": "54169054-7fad-4f70-afd8-7c568855abff",
+      "codigo": "BS-1",
+      "nombre": "Ronda Norte – Sur"
+    },
+    "embarcadero": null,
+    "vigenteDesde": "2026-11-10T11:00:00.000Z",
+    "vigenteHasta": null,
+    "vigencia": "vigente",
+    "creadoEn": "2026-11-10T10:55:00.000Z",
+    "actualizadoEn": "2026-11-10T10:55:00.000Z"
+  },
+  {
+    "id": "7d1f0c1e-0000-4000-8000-000000000002",
+    "tipo": "retraso",
+    "motivo": "clima",
+    "titulo": "Salidas con retraso",
+    "mensaje": "Por lluvia fuerte las salidas pueden tardar hasta 15 minutos.",
+    "alcance": "embarcadero",
+    "ruta": null,
+    "embarcadero": {
+      "id": "fa34f92b-b21f-4781-b9db-04da91356278",
+      "nombre": "Embarcadero Batallón"
+    },
+    "vigenteDesde": "2026-11-10T12:00:00.000Z",
+    "vigenteHasta": "2026-11-10T18:00:00.000Z",
+    "vigencia": "vigente",
+    "creadoEn": "2026-11-10T11:50:00.000Z",
+    "actualizadoEn": "2026-11-10T11:50:00.000Z"
+  },
+  {
+    "id": "7d1f0c1e-0000-4000-8000-000000000003",
+    "tipo": "informativo",
+    "motivo": "otro",
+    "titulo": "Nuevo horario de fin de año",
+    "mensaje": "Del 24 al 31 de diciembre habrá salidas extra.",
+    "alcance": "general",
+    "ruta": null,
+    "embarcadero": null,
+    "vigenteDesde": "2026-12-20T05:00:00.000Z",
+    "vigenteHasta": "2027-01-01T05:00:00.000Z",
+    "vigencia": "programado",
+    "creadoEn": "2026-11-10T09:00:00.000Z",
+    "actualizadoEn": "2026-11-10T09:00:00.000Z"
+  }
+]

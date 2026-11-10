@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:easybus_app/config/app_config.dart';
 import 'package:easybus_app/services/api_client.dart';
 import 'package:easybus_app/services/api_exception.dart';
+import 'package:easybus_app/services/easybus_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _enVivo = bool.fromEnvironment('API_EN_VIVO');
@@ -31,6 +32,30 @@ void main() {
       expect(e.statusCode, 400);
       expect(e.code, 'DATOS_INVALIDOS');
       expect(e.message, contains('UUID'));
+    }
+  }, skip: !_enVivo);
+
+  // Todos los endpoints públicos se convierten con los modelos sin errores.
+  test('EasybusApi lee la API real con los modelos', () async {
+    final easybus = EasybusApi(api);
+    final rutas = await easybus.rutas();
+    expect(rutas, isNotEmpty);
+
+    final detalle = await easybus.ruta(rutas.first.id);
+    final embarcaderos = await easybus.embarcaderos();
+    expect(embarcaderos, isNotEmpty);
+    await easybus.embarcadero(embarcaderos.first.id);
+    await easybus.avisos();
+
+    for (final rs in detalle.sentidos) {
+      await easybus.horarios(rutas.first.id, rs.sentido);
+      final p = await easybus.proximaSalida(rutas.first.id, rs.sentido);
+      expect(p.isScheduled, isTrue);
+      if (rs.paradas.length > 1) {
+        final intermedio = rs.paradas[1].embarcadero.id;
+        final desde = await easybus.proximaSalida(rutas.first.id, rs.sentido, desdeEmbarcaderoId: intermedio);
+        expect(desde.fromStop!.id, intermedio);
+      }
     }
   }, skip: !_enVivo);
 }
