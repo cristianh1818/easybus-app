@@ -11,10 +11,7 @@ abstract final class EbTheme {
   static const fontFamily = 'Poppins';
 
   static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: EbColors.navy,
-      brightness: Brightness.light,
-    ).copyWith(
+    final scheme = ColorScheme.fromSeed(seedColor: EbColors.navy, brightness: Brightness.light).copyWith(
       primary: EbColors.navy,
       onPrimary: EbColors.white,
       secondary: EbColors.river,
@@ -110,9 +107,7 @@ abstract final class EbTheme {
           textStyle: buttonText,
         ),
       ),
-      iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(minimumSize: buttonSize),
-      ),
+      iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(minimumSize: buttonSize)),
 
       cardTheme: CardThemeData(
         color: EbColors.white,

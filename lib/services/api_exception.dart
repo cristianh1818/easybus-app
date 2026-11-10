@@ -51,9 +51,9 @@ class ApiException implements Exception {
   final List<String> errors;
 
   bool get isRetryable => switch (kind) {
-        ApiErrorKind.noConnection || ApiErrorKind.timeout || ApiErrorKind.server => true,
-        _ => false,
-      };
+    ApiErrorKind.noConnection || ApiErrorKind.timeout || ApiErrorKind.server => true,
+    _ => false,
+  };
 
   /// Sin conexión o tiempo agotado: la pantalla puede mostrar los datos en caché.
   bool get isOffline => kind == ApiErrorKind.noConnection || kind == ApiErrorKind.timeout;

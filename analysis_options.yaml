@@ -32,3 +32,7 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+# Ancho de línea para dart format (igual en todo el proyecto)
+formatter:
+  page_width: 110

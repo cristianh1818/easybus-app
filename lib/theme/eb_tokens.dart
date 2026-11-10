@@ -9,6 +9,11 @@ abstract final class EbColors {
   static const river = Color(0xFF1C8FBF); // modo fluvial: trazado, marcadores, chip
   static const bank = Color(0xFF2E9E6B); // acento ribera
 
+  // Marca (docs/diseño)
+  // Azul del cuadro del logo oficial; también es el fondo del splash, para que el borde
+  // del cuadro no se note. (En el SVG es #07295B: 1/255 de diferencia, imperceptible.)
+  static const logoBlue = Color(0xFF08295C);
+
   // Variantes para TEXTO. river, bank y alertDelay no llegan a 4.5:1 sobre blanco
   // (3.66, 3.38 y 4.24), así que solo se usan en líneas, íconos y fondos.
   // Estas versiones oscuras sí cumplen sobre blanco y sobre surface.

@@ -17,14 +17,17 @@ typedef JsonParser<T> = T Function(Object? json);
 
 class ApiClient {
   ApiClient({required String baseUrl, Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 15),
               sendTimeout: const Duration(seconds: 10),
               responseType: ResponseType.json,
               headers: {Headers.acceptHeader: Headers.jsonContentType},
-            )) {
+            ),
+          ) {
     _dio.options.baseUrl = baseUrl;
     if (kDebugMode) _dio.interceptors.add(_DebugLog());
   }
@@ -142,8 +145,14 @@ class ApiClient {
 
     final (code, message) = switch (status) {
       404 => ('NO_ENCONTRADO', 'No encontramos la información solicitada.'),
-      429 => ('DEMASIADAS_SOLICITUDES', 'Hiciste muchas consultas seguidas. Espera un momento e intenta de nuevo.'),
-      final s? when s >= 500 => ('SERVICIO_NO_DISPONIBLE', 'El servicio no está disponible en este momento. Intenta más tarde.'),
+      429 => (
+        'DEMASIADAS_SOLICITUDES',
+        'Hiciste muchas consultas seguidas. Espera un momento e intenta de nuevo.',
+      ),
+      final s? when s >= 500 => (
+        'SERVICIO_NO_DISPONIBLE',
+        'El servicio no está disponible en este momento. Intenta más tarde.',
+      ),
       _ => ('ERROR_DESCONOCIDO', 'Ocurrió un error inesperado. Intenta de nuevo.'),
     };
     return ApiException(kind: kind, statusCode: status, code: code, message: message);
@@ -176,7 +185,9 @@ class _DebugLog extends Interceptor {
   void _log(RequestOptions o, String result) {
     final start = o.extra[_start];
     final ms = start is DateTime ? DateTime.now().difference(start).inMilliseconds : null;
-    debugPrint('[api] ${o.method} ${o.uri.path}${o.uri.hasQuery ? '?${o.uri.query}' : ''} → $result'
-        '${ms == null ? '' : ' ($ms ms)'}');
+    debugPrint(
+      '[api] ${o.method} ${o.uri.path}${o.uri.hasQuery ? '?${o.uri.query}' : ''} → $result'
+      '${ms == null ? '' : ' ($ms ms)'}',
+    );
   }
 }

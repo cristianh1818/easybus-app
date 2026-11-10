@@ -27,10 +27,10 @@ class EasybusApi {
 
   /// GET /rutas/{id}/horarios: salidas desde el origen. Sin [tipoDia], todas.
   Future<HorariosSentido> horarios(String rutaId, Sentido sentido, {TipoDia? tipoDia}) => _client.get(
-        '/rutas/${_seg(rutaId)}/horarios',
-        query: {'sentido': sentido.apiValue, 'tipoDia': tipoDia?.apiValue},
-        parse: (j) => HorariosSentido.fromJson(asJsonMap(j)),
-      );
+    '/rutas/${_seg(rutaId)}/horarios',
+    query: {'sentido': sentido.apiValue, 'tipoDia': tipoDia?.apiValue},
+    parse: (j) => HorariosSentido.fromJson(asJsonMap(j)),
+  );
 
   /// GET /rutas/{id}/proxima-salida: próximo paso por [desdeEmbarcaderoId]
   /// (o por el origen si se omite).
@@ -42,19 +42,18 @@ class EasybusApi {
     Sentido sentido, {
     String? desdeEmbarcaderoId,
     String? momento,
-  }) =>
-      _client.get(
-        '/rutas/${_seg(rutaId)}/proxima-salida',
-        query: {'sentido': sentido.apiValue, 'desde': desdeEmbarcaderoId, 'momento': momento},
-        parse: (j) => ProximaSalida.fromJson(asJsonMap(j)),
-      );
+  }) => _client.get(
+    '/rutas/${_seg(rutaId)}/proxima-salida',
+    query: {'sentido': sentido.apiValue, 'desde': desdeEmbarcaderoId, 'momento': momento},
+    parse: (j) => ProximaSalida.fromJson(asJsonMap(j)),
+  );
 
   /// GET /embarcaderos: todos los visibles (activos y cerrados temporalmente).
   Future<List<Embarcadero>> embarcaderos({TipoParada? tipo}) => _client.get(
-        '/embarcaderos',
-        query: {'tipo': tipo?.apiValue},
-        parse: (j) => asJsonList(j, Embarcadero.fromJson),
-      );
+    '/embarcaderos',
+    query: {'tipo': tipo?.apiValue},
+    parse: (j) => asJsonList(j, Embarcadero.fromJson),
+  );
 
   /// GET /embarcaderos/{id}: el embarcadero y las rutas que lo atienden.
   Future<EmbarcaderoDetalle> embarcadero(String id) =>
@@ -62,10 +61,10 @@ class EasybusApi {
 
   /// GET /avisos: avisos vigentes, opcionalmente de una ruta o de un embarcadero.
   Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) => _client.get(
-        '/avisos',
-        query: {'rutaId': rutaId, 'embarcaderoId': embarcaderoId},
-        parse: (j) => asJsonList(j, Aviso.fromJson),
-      );
+    '/avisos',
+    query: {'rutaId': rutaId, 'embarcaderoId': embarcaderoId},
+    parse: (j) => asJsonList(j, Aviso.fromJson),
+  );
 
   // Un id nunca debe poder cambiar la ruta de la URL ("../admin", "a/b").
   static String _seg(String id) => Uri.encodeComponent(id);

@@ -172,13 +172,13 @@ class DepartureStop {
   final bool isEstimatedTime;
 
   factory DepartureStop.fromJson(JsonMap json) => DepartureStop(
-        id: json.str('id'),
-        name: json.str('name'),
-        order: json.integer('order'),
-        isOrigin: json.boolean('isOrigin'),
-        minutesFromOrigin: json.integer('minutesFromOrigin'),
-        isEstimatedTime: json.boolean('isEstimatedTime'),
-      );
+    id: json.str('id'),
+    name: json.str('name'),
+    order: json.integer('order'),
+    isOrigin: json.boolean('isOrigin'),
+    minutesFromOrigin: json.integer('minutesFromOrigin'),
+    isEstimatedTime: json.boolean('isEstimatedTime'),
+  );
 }
 
 /// Aviso dentro de /proxima-salida. Las claves van en inglés, pero los VALORES de
@@ -206,14 +206,14 @@ class DepartureAlert {
   final DateTime? until;
 
   factory DepartureAlert.fromJson(JsonMap json) => DepartureAlert(
-        id: json.str('id'),
-        type: json.enumValue('type', TipoAviso.values, TipoAviso.informativo),
-        reason: json.enumValue('reason', MotivoAviso.values, MotivoAviso.otro),
-        title: json.str('title'),
-        message: json.str('message'),
-        scope: json.enumValue('scope', AlcanceAviso.values, AlcanceAviso.general),
-        until: json.dateOrNull('until'),
-      );
+    id: json.str('id'),
+    type: json.enumValue('type', TipoAviso.values, TipoAviso.informativo),
+    reason: json.enumValue('reason', MotivoAviso.values, MotivoAviso.otro),
+    title: json.str('title'),
+    message: json.str('message'),
+    scope: json.enumValue('scope', AlcanceAviso.values, AlcanceAviso.general),
+    until: json.dateOrNull('until'),
+  );
 }
 
 @immutable
@@ -231,9 +231,9 @@ class NextDayDeparture {
   final String originDepartureTime;
 
   factory NextDayDeparture.fromJson(JsonMap json) => NextDayDeparture(
-        date: json.str('date'),
-        dayType: json.enumValue('dayType', DayType.values, DayType.weekday),
-        departureTime: json.str('departureTime'),
-        originDepartureTime: json.str('originDepartureTime'),
-      );
+    date: json.str('date'),
+    dayType: json.enumValue('dayType', DayType.values, DayType.weekday),
+    departureTime: json.str('departureTime'),
+    originDepartureTime: json.str('originDepartureTime'),
+  );
 }

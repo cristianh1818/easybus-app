@@ -23,8 +23,10 @@ class ThemePreviewScreen extends StatelessWidget {
         children: [
           Text('Próximo zarpe', style: text.titleMedium),
           Text('07:20', style: text.displayMedium?.copyWith(color: EbColors.navy)),
-          Text('en 15 min · Horario programado, no ubicación en tiempo real',
-              style: text.bodySmall?.copyWith(color: EbColors.textMuted)),
+          Text(
+            'en 15 min · Horario programado, no ubicación en tiempo real',
+            style: text.bodySmall?.copyWith(color: EbColors.textMuted),
+          ),
           const SizedBox(height: EbSpacing.l),
           Wrap(
             spacing: EbSpacing.s,
@@ -98,10 +100,12 @@ class _Swatches extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: EbSpacing.m, vertical: EbSpacing.s),
             alignment: Alignment.center,
             decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(EbRadius.card / 2)),
-            child: Text(nombre,
-                maxLines: 1,
-                softWrap: false,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: EbColors.white)),
+            child: Text(
+              nombre,
+              maxLines: 1,
+              softWrap: false,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: EbColors.white),
+            ),
           ),
       ],
     );

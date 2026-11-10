@@ -51,6 +51,9 @@ Future<void> expectLastItemAboveNavBar(WidgetTester tester, Finder lastItem) asy
   await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
   await tester.pumpAndSettle();
   final bottom = tester.getBottomLeft(lastItem).dy;
-  expect(bottom, lessThanOrEqualTo(smallPhone.height - systemBars.bottom),
-      reason: 'El último elemento queda debajo de la barra de navegación');
+  expect(
+    bottom,
+    lessThanOrEqualTo(smallPhone.height - systemBars.bottom),
+    reason: 'El último elemento queda debajo de la barra de navegación',
+  );
 }

@@ -5,8 +5,7 @@ import '../helpers/layout_checks.dart';
 
 void main() {
   for (final scale in fontScales) {
-    testWidgets('Vista del tema sin desbordes con la fuente al ${(scale * 100).round()} %',
-        (tester) async {
+    testWidgets('Vista del tema sin desbordes con la fuente al ${(scale * 100).round()} %', (tester) async {
       await pumpScreen(tester, const ThemePreviewScreen(), scale: scale);
       await expectLastItemAboveNavBar(tester, find.text('labelSmall'));
     });

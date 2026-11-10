@@ -19,12 +19,18 @@ class _FixtureAdapter implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(RequestOptions o, Stream<Uint8List>? body, Future<void>? cancel) async {
     lastUri = o.uri;
-    final match = files.entries.firstWhere((e) => o.uri.path.endsWith(e.key),
-        orElse: () => throw StateError('Sin fixture para ${o.uri.path}'));
+    final match = files.entries.firstWhere(
+      (e) => o.uri.path.endsWith(e.key),
+      orElse: () => throw StateError('Sin fixture para ${o.uri.path}'),
+    );
     final (file, status) = match.value;
-    return ResponseBody.fromString(File('test/fixtures/$file').readAsStringSync(), status, headers: {
-      Headers.contentTypeHeader: [Headers.jsonContentType],
-    });
+    return ResponseBody.fromString(
+      File('test/fixtures/$file').readAsStringSync(),
+      status,
+      headers: {
+        Headers.contentTypeHeader: [Headers.jsonContentType],
+      },
+    );
   }
 
   @override
@@ -69,9 +75,11 @@ void main() {
     final (api, _) = _api({'/proxima-salida': ('error_fuera_de_ruta.json', 400)});
     await expectLater(
       api.proximaSalida('r-1', Sentido.ida, desdeEmbarcaderoId: 'x'),
-      throwsA(isA<ApiException>()
-          .having((e) => e.code, 'code', 'EMBARCADERO_FUERA_DE_RUTA')
-          .having((e) => e.message, 'message', contains('no está en el sentido ida'))),
+      throwsA(
+        isA<ApiException>()
+            .having((e) => e.code, 'code', 'EMBARCADERO_FUERA_DE_RUTA')
+            .having((e) => e.message, 'message', contains('no está en el sentido ida')),
+      ),
     );
   });
 

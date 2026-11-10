@@ -24,12 +24,12 @@ class _FakeAdapter implements HttpClientAdapter {
 }
 
 ResponseBody _json(Object body, int status) => ResponseBody.fromString(
-      jsonEncode(body),
-      status,
-      headers: {
-        Headers.contentTypeHeader: [Headers.jsonContentType],
-      },
-    );
+  jsonEncode(body),
+  status,
+  headers: {
+    Headers.contentTypeHeader: [Headers.jsonContentType],
+  },
+);
 
 (ApiClient, _FakeAdapter) _client(Future<ResponseBody> Function(RequestOptions) handler) {
   final adapter = _FakeAdapter(handler);
@@ -54,21 +54,28 @@ void main() {
   });
 
   test('Devuelve lo que entrega el parser', () async {
-    final (api, _) = _client((_) async => _json([
-          {'id': 'a'},
-          {'id': 'b'},
-        ], 200));
-    final ids = await api.get('/rutas', parse: (j) => [for (final r in j as List) (r as Map)['id'] as String]);
+    final (api, _) = _client(
+      (_) async => _json([
+        {'id': 'a'},
+        {'id': 'b'},
+      ], 200),
+    );
+    final ids = await api.get(
+      '/rutas',
+      parse: (j) => [for (final r in j as List) (r as Map)['id'] as String],
+    );
     expect(ids, ['a', 'b']);
   });
 
   test('Error de la API: conserva code, message y errores en español', () async {
-    final (api, _) = _client((_) async => _json({
-          'statusCode': 400,
-          'code': 'DATOS_INVALIDOS',
-          'message': 'lat no es una latitud válida',
-          'errores': ['lat no es una latitud válida'],
-        }, 400));
+    final (api, _) = _client(
+      (_) async => _json({
+        'statusCode': 400,
+        'code': 'DATOS_INVALIDOS',
+        'message': 'lat no es una latitud válida',
+        'errores': ['lat no es una latitud válida'],
+      }, 400),
+    );
     final e = await _error(api.get('/rutas/x', parse: (j) => j));
     expect(e.kind, ApiErrorKind.client);
     expect(e.statusCode, 400);
@@ -79,10 +86,15 @@ void main() {
   });
 
   test('Error 502 sin JSON (página de Nginx): mensaje genérico y reintentable', () async {
-    final (api, _) = _client((_) async => ResponseBody.fromString('<html>Bad Gateway</html>', 502,
+    final (api, _) = _client(
+      (_) async => ResponseBody.fromString(
+        '<html>Bad Gateway</html>',
+        502,
         headers: {
           Headers.contentTypeHeader: ['text/html'],
-        }));
+        },
+      ),
+    );
     final e = await _error(api.get('/rutas', parse: (j) => j));
     expect(e.kind, ApiErrorKind.server);
     expect(e.code, 'SERVICIO_NO_DISPONIBLE');
@@ -90,8 +102,9 @@ void main() {
   });
 
   test('Sin conexión: SIN_CONEXION, reintentable y se puede usar la caché', () async {
-    final (api, _) = _client((o) async =>
-        throw DioException.connectionError(requestOptions: o, reason: 'Connection refused'));
+    final (api, _) = _client(
+      (o) async => throw DioException.connectionError(requestOptions: o, reason: 'Connection refused'),
+    );
     final e = await _error(api.get('/rutas', parse: (j) => j));
     expect(e.code, 'SIN_CONEXION');
     expect(e.isRetryable, isTrue);
@@ -99,8 +112,9 @@ void main() {
   });
 
   test('Tiempo agotado', () async {
-    final (api, _) = _client((o) async =>
-        throw DioException.receiveTimeout(timeout: const Duration(seconds: 15), requestOptions: o));
+    final (api, _) = _client(
+      (o) async => throw DioException.receiveTimeout(timeout: const Duration(seconds: 15), requestOptions: o),
+    );
     final e = await _error(api.get('/rutas', parse: (j) => j));
     expect(e.kind, ApiErrorKind.timeout);
     expect(e.isOffline, isTrue);

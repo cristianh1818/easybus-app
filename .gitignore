@@ -46,3 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Diseño: los PDF de los mockups no van al repo (los PNG sí)
+docs/diseño/mockups/*.pdf

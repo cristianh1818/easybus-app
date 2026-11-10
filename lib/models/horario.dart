@@ -24,12 +24,12 @@ class HorariosSentido {
   final List<Horario> horarios;
 
   factory HorariosSentido.fromJson(JsonMap json) => HorariosSentido(
-        rutaId: json.str('rutaId'),
-        sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
-        destino: json.str('destino'),
-        actualizadoEn: json.date('actualizadoEn'),
-        horarios: json.list('horarios', Horario.fromJson),
-      );
+    rutaId: json.str('rutaId'),
+    sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
+    destino: json.str('destino'),
+    actualizadoEn: json.date('actualizadoEn'),
+    horarios: json.list('horarios', Horario.fromJson),
+  );
 }
 
 @immutable

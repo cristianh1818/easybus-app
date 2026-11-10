@@ -19,9 +19,9 @@ Object? fixture(String name) => jsonDecode(File('test/fixtures/$name').readAsStr
 
 /// Montería está cerca de lat 8.75, lng -75.88: detecta si se invirtió el orden GeoJSON.
 Matcher get enMonteria => predicate<dynamic>(
-      (p) => p.lat > 8.6 && p.lat < 8.9 && p.lng > -76.0 && p.lng < -75.8,
-      'coordenada en Montería (lat, lng)',
-    );
+  (p) => p.lat > 8.6 && p.lat < 8.9 && p.lng > -76.0 && p.lng < -75.8,
+  'coordenada en Montería (lat, lng)',
+);
 
 void main() {
   group('Rutas', () {

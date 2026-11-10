@@ -38,6 +38,7 @@ dependencies:
   flutter_riverpod: ^3.5.0
   flutter_localizations:
     sdk: flutter
+  flutter_native_splash: ^2.4.8
 
 dev_dependencies:
   flutter_test:
@@ -49,17 +50,16 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-
-# The following section is specific to Flutter packages.
+  flutter_launcher_icons: ^0.14.4
+  flutter_svg: ^2.3.2
 flutter:
   uses-material-design: true
 
   assets:
     # Licencia de Poppins: se registra en LicenseRegistry para que aparezca en "Licencias"
     - assets/fonts/OFL.txt
+    # Logo oficial (copia de docs/diseño/logo/easybus_logo_500.png)
+    - assets/images/easybus_logo.png
 
   # Poppins va incluida en la app (no se descarga) para que funcione sin conexión
   fonts:
@@ -73,3 +73,31 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
+
+# Imágenes de marca generadas desde el logo oficial con
+#   flutter test tool/generate_brand_images_test.dart
+# y luego aplicadas con los dos comandos de abajo.
+
+# Splash nativo (dart run flutter_native_splash:create): se ve al instante mientras
+# arranca Flutter, con el logo al 90 %, igual que el primer cuadro del splash animado.
+# El color debe coincidir con splashBackground (lib/screens/splash_screen.dart).
+flutter_native_splash:
+  color: "#08295C"
+  image: assets/splash/splash_logo.png
+  android_12:
+    color: "#08295C"
+    image: assets/splash/splash_logo.png
+  web: false
+
+# Ícono del launcher (dart run flutter_launcher_icons)
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/icon_full.png
+  adaptive_icon_background: "#08295C"
+  adaptive_icon_foreground: assets/icon/icon_foreground.png
+  # La imagen ya trae el margen de la zona segura (ver tool/generate_brand_images_test.dart)
+  adaptive_icon_foreground_inset: 0
+  remove_alpha_ios: true
+  background_color_ios: "#08295C"
+  min_sdk_android: 21

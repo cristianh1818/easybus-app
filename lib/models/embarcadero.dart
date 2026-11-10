@@ -57,22 +57,22 @@ class Embarcadero {
   bool get estaCerrado => estado != EstadoEmbarcadero.activo;
 
   factory Embarcadero.fromJson(JsonMap json) => Embarcadero(
-        id: json.str('id'),
-        nombre: json.str('nombre'),
-        referencia: json.strOrNull('referencia'),
-        ubicacion: GeoPoint(json.number('latitud'), json.number('longitud')),
-        tipo: json.enumValue('tipo', TipoParada.values, TipoParada.embarcadero),
-        margen: json.enumOrNull('margen', Margen.values),
-        // Un estado desconocido se trata como cerrado: es más seguro no anunciar
-        // zarpes desde un embarcadero cuyo estado no se entiende.
-        estado: json.enumValue('estado', EstadoEmbarcadero.values, EstadoEmbarcadero.cerradoTemporal),
-        tieneRampa: json.booleanOrNull('tieneRampa'),
-        tieneTecho: json.booleanOrNull('tieneTecho'),
-        tieneIluminacion: json.booleanOrNull('tieneIluminacion'),
-        fotoUrl: json.strOrNull('fotoUrl'),
-        esOficial: json.booleanOrNull('esOficial') ?? false,
-        actualizadoEn: json.date('actualizadoEn'),
-      );
+    id: json.str('id'),
+    nombre: json.str('nombre'),
+    referencia: json.strOrNull('referencia'),
+    ubicacion: GeoPoint(json.number('latitud'), json.number('longitud')),
+    tipo: json.enumValue('tipo', TipoParada.values, TipoParada.embarcadero),
+    margen: json.enumOrNull('margen', Margen.values),
+    // Un estado desconocido se trata como cerrado: es más seguro no anunciar
+    // zarpes desde un embarcadero cuyo estado no se entiende.
+    estado: json.enumValue('estado', EstadoEmbarcadero.values, EstadoEmbarcadero.cerradoTemporal),
+    tieneRampa: json.booleanOrNull('tieneRampa'),
+    tieneTecho: json.booleanOrNull('tieneTecho'),
+    tieneIluminacion: json.booleanOrNull('tieneIluminacion'),
+    fotoUrl: json.strOrNull('fotoUrl'),
+    esOficial: json.booleanOrNull('esOficial') ?? false,
+    actualizadoEn: json.date('actualizadoEn'),
+  );
 }
 
 /// GET /embarcaderos/{id}: el embarcadero y las rutas activas que pasan por él.
@@ -84,9 +84,9 @@ class EmbarcaderoDetalle {
   final List<RutaEnEmbarcadero> rutas;
 
   factory EmbarcaderoDetalle.fromJson(JsonMap json) => EmbarcaderoDetalle(
-        embarcadero: Embarcadero.fromJson(json),
-        rutas: json.list('rutas', RutaEnEmbarcadero.fromJson),
-      );
+    embarcadero: Embarcadero.fromJson(json),
+    rutas: json.list('rutas', RutaEnEmbarcadero.fromJson),
+  );
 }
 
 /// Una ruta (en un sentido) que atiende al embarcadero, con su posición en ella.
@@ -117,13 +117,13 @@ class RutaEnEmbarcadero {
   final bool tiempoEstimado;
 
   factory RutaEnEmbarcadero.fromJson(JsonMap json) => RutaEnEmbarcadero(
-        ruta: RutaResumen.fromJson(json.obj('ruta')),
-        sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
-        destino: json.str('destino'),
-        orden: json.integer('orden'),
-        totalEmbarcaderos: json.integerOrNull('totalEmbarcaderos'),
-        esOrigen: json.boolean('esOrigen'),
-        minutosDesdeOrigen: json.integer('minutosDesdeOrigen'),
-        tiempoEstimado: json.boolean('tiempoEstimado'),
-      );
+    ruta: RutaResumen.fromJson(json.obj('ruta')),
+    sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
+    destino: json.str('destino'),
+    orden: json.integer('orden'),
+    totalEmbarcaderos: json.integerOrNull('totalEmbarcaderos'),
+    esOrigen: json.boolean('esOrigen'),
+    minutosDesdeOrigen: json.integer('minutosDesdeOrigen'),
+    tiempoEstimado: json.boolean('tiempoEstimado'),
+  );
 }

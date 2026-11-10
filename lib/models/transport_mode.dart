@@ -20,7 +20,7 @@ enum TransportMode implements ApiEnum {
 
   /// Modo que corresponde a un tipo de parada.
   static TransportMode fromTipoParada(TipoParada tipo) => switch (tipo) {
-        TipoParada.embarcadero => fluvial,
-        TipoParada.paradaBus => bus,
-      };
+    TipoParada.embarcadero => fluvial,
+    TipoParada.paradaBus => bus,
+  };
 }

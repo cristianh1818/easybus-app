@@ -13,13 +13,7 @@ import 'transport_mode.dart';
 /// Datos mínimos de una ruta, como vienen dentro de otras respuestas.
 @immutable
 class RutaResumen {
-  const RutaResumen({
-    required this.id,
-    required this.codigo,
-    required this.nombre,
-    this.color,
-    this.mode,
-  });
+  const RutaResumen({required this.id, required this.codigo, required this.nombre, this.color, this.mode});
 
   final String id;
 
@@ -32,12 +26,12 @@ class RutaResumen {
   final TransportMode? mode;
 
   factory RutaResumen.fromJson(JsonMap json) => RutaResumen(
-        id: json.str('id'),
-        codigo: json.str('codigo'),
-        nombre: json.str('nombre'),
-        color: json.strOrNull('color'),
-        mode: json.containsKey('modo') ? TransportMode.fromApi(json.strOrNull('modo')) : null,
-      );
+    id: json.str('id'),
+    codigo: json.str('codigo'),
+    nombre: json.str('nombre'),
+    color: json.strOrNull('color'),
+    mode: json.containsKey('modo') ? TransportMode.fromApi(json.strOrNull('modo')) : null,
+  );
 }
 
 /// Elemento de GET /rutas.
@@ -70,17 +64,17 @@ class Ruta {
   final DateTime actualizadoEn;
 
   factory Ruta.fromJson(JsonMap json) => Ruta(
-        id: json.str('id'),
-        codigo: json.str('codigo'),
-        nombre: json.str('nombre'),
-        descripcion: json.strOrNull('descripcion'),
-        color: json.strOrNull('color'),
-        estado: json.enumValue('estado', EstadoRuta.values, EstadoRuta.inactiva),
-        mode: TransportMode.fromApi(json.strOrNull('modo')),
-        esOficial: json.booleanOrNull('esOficial') ?? false,
-        sentidos: json.list('sentidos', SentidoResumen.fromJson),
-        actualizadoEn: json.date('actualizadoEn'),
-      );
+    id: json.str('id'),
+    codigo: json.str('codigo'),
+    nombre: json.str('nombre'),
+    descripcion: json.strOrNull('descripcion'),
+    color: json.strOrNull('color'),
+    estado: json.enumValue('estado', EstadoRuta.values, EstadoRuta.inactiva),
+    mode: TransportMode.fromApi(json.strOrNull('modo')),
+    esOficial: json.booleanOrNull('esOficial') ?? false,
+    sentidos: json.list('sentidos', SentidoResumen.fromJson),
+    actualizadoEn: json.date('actualizadoEn'),
+  );
 }
 
 /// Sentido dentro de GET /rutas: sin trazado ni embarcaderos.
@@ -93,10 +87,10 @@ class SentidoResumen {
   final String destino;
 
   factory SentidoResumen.fromJson(JsonMap json) => SentidoResumen(
-        id: json.str('id'),
-        sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
-        destino: json.str('destino'),
-      );
+    id: json.str('id'),
+    sentido: json.enumValue('sentido', Sentido.values, Sentido.ida),
+    destino: json.str('destino'),
+  );
 }
 
 /// GET /rutas/{id}.
@@ -119,10 +113,10 @@ class RutaDetalle {
   }
 
   factory RutaDetalle.fromJson(JsonMap json) => RutaDetalle(
-        ruta: Ruta.fromJson(json),
-        sentidos: json.list('sentidos', RutaSentido.fromJson),
-        avisos: json.list('avisos', Aviso.fromJson),
-      );
+    ruta: Ruta.fromJson(json),
+    sentidos: json.list('sentidos', RutaSentido.fromJson),
+    avisos: json.list('avisos', Aviso.fromJson),
+  );
 }
 
 /// Un sentido de la ruta con su trazado por el río y sus embarcaderos en orden.
@@ -192,11 +186,11 @@ class ParadaEnRuta {
   bool get esOrigen => orden == 1;
 
   factory ParadaEnRuta.fromJson(JsonMap json) => ParadaEnRuta(
-        orden: json.integer('orden'),
-        minutosDesdeOrigen: json.integer('minutosDesdeOrigen'),
-        tiempoEstimado: json.boolean('tiempoEstimado'),
-        distanciaAlTrazadoM: json.integerOrNull('distanciaAlTrazadoM'),
-        lejosDelTrazado: json.booleanOrNull('lejosDelTrazado') ?? false,
-        embarcadero: Embarcadero.fromJson(json),
-      );
+    orden: json.integer('orden'),
+    minutosDesdeOrigen: json.integer('minutosDesdeOrigen'),
+    tiempoEstimado: json.boolean('tiempoEstimado'),
+    distanciaAlTrazadoM: json.integerOrNull('distanciaAlTrazadoM'),
+    lejosDelTrazado: json.booleanOrNull('lejosDelTrazado') ?? false,
+    embarcadero: Embarcadero.fromJson(json),
+  );
 }

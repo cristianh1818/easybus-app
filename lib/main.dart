@@ -1,17 +1,22 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
+import 'providers/retry_policy.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  // El splash nativo se queda hasta que el splash animado tenga el logo listo
+  // (lo quita SplashScreen con FlutterNativeSplash.remove()).
+  FlutterNativeSplash.preserve(widgetsBinding: binding);
   // De borde a borde en todas las versiones de Android (en Android 15+ ya es obligatorio).
   // Cada pantalla respeta las barras del sistema con SafeArea o ebScrollPadding.
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   _registrarLicencias();
-  runApp(const ProviderScope(child: EasyBusApp()));
+  runApp(const ProviderScope(retry: apiRetryPolicy, child: EasyBusApp()));
 }
 
 // Poppins viene incluida en la app; su licencia OFL debe aparecer en "Licencias".
