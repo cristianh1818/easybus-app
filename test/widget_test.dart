@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:easybus_app/main.dart';
+import 'package:easybus_app/app.dart';
+import 'package:easybus_app/models/transport_mode.dart';
+import 'package:easybus_app/theme/eb_theme.dart';
+import 'package:easybus_app/theme/eb_tokens.dart';
+import 'package:easybus_app/theme/mode_style.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('El tema usa Poppins y el azul marino institucional', () {
+    final theme = EbTheme.light();
+    expect(theme.textTheme.bodyMedium?.fontFamily, 'Poppins');
+    expect(theme.colorScheme.primary, EbColors.navy);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('Cada modo de transporte tiene su estilo', () {
+    for (final mode in TransportMode.values) {
+      expect(modeStyle[mode], isNotNull, reason: '$mode sin estilo');
+    }
+    expect(TransportMode.fluvial.style.stopLabel, 'Embarcadero');
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('TransportMode.fromApi lee el valor de la API', () {
+    expect(TransportMode.fromApi('bus'), TransportMode.bus);
+    expect(TransportMode.fromApi('fluvial'), TransportMode.fluvial);
+    expect(TransportMode.fromApi(null), TransportMode.fluvial);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('La app arranca en español', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: EasyBusApp()));
+    final context = tester.element(find.byType(Scaffold));
+    expect(Localizations.localeOf(context).languageCode, 'es');
   });
 }
