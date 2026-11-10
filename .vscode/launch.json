@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Teléfono por USB (adb reverse)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=API_BASE_URL=http://localhost:3000/api/v1"]
+    },
+    {
+      "name": "Emulador Android",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "args": ["--dart-define=API_BASE_URL=http://10.0.2.2:3000/api/v1"]
+    },
+    {
+      "name": "Teléfono · profile (medir rendimiento)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "flutterMode": "profile",
+      "args": ["--dart-define=API_BASE_URL=http://localhost:3000/api/v1"]
+    }
+  ]
+}

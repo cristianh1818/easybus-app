@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Necesario para consultar la API (Flutter solo lo agrega en debug y profile) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
-        android:label="easybus_app"
+        android:label="EASYBUS"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"
