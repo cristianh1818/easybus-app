@@ -1,8 +1,9 @@
-// Fuente de datos de las pantallas. Hoy solo llama a la API; en el paso de caché
-// offline se agrega otra implementación (caché + API) y las pantallas no cambian.
+// Fuente de datos de las pantallas. Dos implementaciones con la misma interfaz:
+//   - CachedEasybusRepository (la que usa la app): primero lo guardado en el
+//     teléfono y luego lo actualizado desde la API.
+//   - ApiEasybusRepository: solo la API, sin caché.
 //
-// Los métodos watch* devuelven un Stream: hoy emite una vez (la respuesta de la API);
-// con caché emitirá primero lo guardado en el teléfono y luego lo actualizado.
+// Los métodos watch* devuelven un Stream de Fetched (datos + de dónde vienen + cuándo).
 // Avisos y próxima salida siempre van a la API: un aviso de suspensión desactualizado
 // o una hora calculada con otro reloj serían engañosos.
 
@@ -12,6 +13,11 @@ import '../models/enums.dart';
 import '../models/horario.dart';
 import '../models/proxima_salida.dart';
 import '../models/ruta.dart';
+
+import 'package:flutter/foundation.dart';
+
+import '../services/api_exception.dart';
+import '../services/cache/response_cache.dart';
 import '../services/easybus_api.dart';
 import 'fetched.dart';
 
@@ -61,6 +67,80 @@ class ApiEasybusRepository implements EasybusRepository {
   Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) =>
       _api.avisos(rutaId: rutaId, embarcaderoId: embarcaderoId);
 
+  @override
+  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) =>
+      _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);
+}
+
+/// Caché offline + API. Para embarcaderos, rutas y horarios:
+///   1. Emite lo guardado en el teléfono (si hay y se puede leer).
+///   2. Consulta la API, guarda la respuesta y la emite.
+///   3. Si la API falla y había algo guardado, lo vuelve a emitir marcado con el
+///      error (la pantalla dice "Sin conexión · Actualizado hace X"). Si no había
+///      nada guardado, el error llega a la pantalla.
+class CachedEasybusRepository implements EasybusRepository {
+  CachedEasybusRepository(this._api, this._cache, {DateTime Function()? now}) : _now = now ?? DateTime.now;
+
+  final EasybusApi _api;
+  final ResponseCache _cache;
+  final DateTime Function() _now;
+
+  Stream<Fetched<T>> _cacheThenNetwork<T>(ApiEndpoint<T> endpoint) async* {
+    Fetched<T>? cached;
+    try {
+      final saved = await _cache.read(endpoint.cacheKey);
+      if (saved != null) {
+        cached = Fetched(endpoint.parse(saved.json), updatedAt: saved.updatedAt, origin: DataOrigin.cache);
+      }
+    } on Object catch (e) {
+      // Guardado con otro formato o dañado: se descarta y se usa la red
+      debugPrint('[cache] no se pudo leer ${endpoint.cacheKey}: $e');
+      await _cache.remove(endpoint.cacheKey).catchError((Object _) {});
+    }
+    if (cached != null) yield cached;
+
+    final (T, Object?) fresh;
+    try {
+      fresh = await _api.fetchWithJson(endpoint);
+    } on ApiException catch (e) {
+      if (cached == null) rethrow;
+      yield Fetched(cached.data, updatedAt: cached.updatedAt, origin: DataOrigin.cache, refreshError: e);
+      return;
+    }
+    final now = _now();
+    try {
+      await _cache.write(endpoint.cacheKey, fresh.$2, now);
+    } on Object catch (e) {
+      // Sin espacio, base cerrada…: la app sigue con los datos de la red
+      debugPrint('[cache] no se pudo guardar ${endpoint.cacheKey}: $e');
+    }
+    yield Fetched(fresh.$1, updatedAt: now, origin: DataOrigin.network);
+  }
+
+  @override
+  Stream<Fetched<List<Embarcadero>>> watchEmbarcaderos() => _cacheThenNetwork(ApiEndpoint.embarcaderos());
+
+  @override
+  Stream<Fetched<EmbarcaderoDetalle>> watchEmbarcadero(String id) =>
+      _cacheThenNetwork(ApiEndpoint.embarcadero(id));
+
+  @override
+  Stream<Fetched<List<Ruta>>> watchRutas() => _cacheThenNetwork(ApiEndpoint.rutas());
+
+  @override
+  Stream<Fetched<RutaDetalle>> watchRuta(String id) => _cacheThenNetwork(ApiEndpoint.ruta(id));
+
+  @override
+  Stream<Fetched<HorariosSentido>> watchHorarios(String rutaId, Sentido sentido, {TipoDia? tipoDia}) =>
+      _cacheThenNetwork(ApiEndpoint.horarios(rutaId, sentido, tipoDia: tipoDia));
+
+  /// Siempre desde la API: un aviso de suspensión guardado podría estar vencido o
+  /// faltar uno nuevo.
+  @override
+  Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) =>
+      _api.avisos(rutaId: rutaId, embarcaderoId: embarcaderoId);
+
+  /// Siempre desde la API: depende de la hora y de los festivos.
   @override
   Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) =>
       _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);

@@ -1,5 +1,5 @@
 // Providers de datos que usan las pantallas. Leen del repository, nunca de la API
-// directamente, para que la caché offline se pueda agregar sin tocar las pantallas.
+// directamente: el repository decide si los datos vienen de la caché o de la red.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,10 +12,16 @@ import '../models/ruta.dart';
 import '../repositories/easybus_repository.dart';
 import '../repositories/fetched.dart';
 import 'api_providers.dart';
+import 'cache_providers.dart';
 import 'clock_provider.dart';
 
+/// Caché offline (SQLite) + API: primero lo guardado, luego lo actualizado.
 final easybusRepositoryProvider = Provider<EasybusRepository>(
-  (ref) => ApiEasybusRepository(ref.watch(easybusApiProvider)),
+  (ref) => CachedEasybusRepository(
+    ref.watch(easybusApiProvider),
+    ref.watch(responseCacheProvider),
+    now: ref.watch(nowProvider),
+  ),
 );
 
 // Listas: se conservan durante la sesión (cambiar de pestaña no vuelve a descargarlas).

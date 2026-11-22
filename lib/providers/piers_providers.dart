@@ -44,7 +44,7 @@ class PierListItem {
 
 @immutable
 class PiersOverview {
-  const PiersOverview({required this.items, required this.updatedAt, this.routesError});
+  const PiersOverview({required this.items, required this.updatedAt, this.routesError, this.staleError});
 
   final List<PierListItem> items;
 
@@ -53,6 +53,10 @@ class PiersOverview {
 
   /// Las rutas no se pudieron leer: la lista se muestra sin próximos zarpes.
   final ApiException? routesError;
+
+  /// Se muestran datos guardados en el teléfono porque falló la actualización
+  /// (normalmente: sin conexión).
+  final ApiException? staleError;
 
   /// Todos son datos de ejemplo pendientes de validar en campo.
   bool get allSampleData => items.isNotEmpty && items.every((i) => !i.embarcadero.esOficial);
@@ -64,6 +68,7 @@ final piersOverviewProvider = FutureProvider.family<PiersOverview, TransportMode
 
   final embarcaderos = await embarcaderosFuture;
   var updatedAt = embarcaderos.updatedAt;
+  var staleError = embarcaderos.refreshError;
   final services = <String, List<PierService>>{};
   final riverOrder = <String, int>{};
   ApiException? routesError;
@@ -71,6 +76,7 @@ final piersOverviewProvider = FutureProvider.family<PiersOverview, TransportMode
   try {
     final rutas = await rutasFuture;
     if (rutas.updatedAt.isBefore(updatedAt)) updatedAt = rutas.updatedAt;
+    staleError ??= rutas.refreshError;
     final activas = rutas.data.where((r) => r.mode == mode && r.estado == EstadoRuta.activa).toList()
       ..sort((a, b) => a.codigo.compareTo(b.codigo));
     final detalles = await Future.wait([
@@ -79,6 +85,7 @@ final piersOverviewProvider = FutureProvider.family<PiersOverview, TransportMode
 
     for (final detalle in detalles) {
       if (detalle.updatedAt.isBefore(updatedAt)) updatedAt = detalle.updatedAt;
+      staleError ??= detalle.refreshError;
       final ruta = detalle.data;
       // Ida primero: define el orden a lo largo del río
       final sentidos = [...ruta.sentidos]..sort((a, b) => a.sentido.index.compareTo(b.sentido.index));
@@ -121,5 +128,10 @@ final piersOverviewProvider = FutureProvider.family<PiersOverview, TransportMode
     return byRiver != 0 ? byRiver : a.embarcadero.nombre.compareTo(b.embarcadero.nombre);
   });
 
-  return PiersOverview(items: List.unmodifiable(items), updatedAt: updatedAt, routesError: routesError);
+  return PiersOverview(
+    items: List.unmodifiable(items),
+    updatedAt: updatedAt,
+    routesError: routesError,
+    staleError: staleError,
+  );
 });

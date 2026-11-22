@@ -104,6 +104,8 @@ class _PiersList extends ConsumerWidget {
     final muted = text.bodySmall?.copyWith(color: EbColors.textMuted);
     final now = ref.watch(clockProvider).value ?? ref.watch(nowProvider)();
     final avisos = ref.watch(avisosProvider(_allAvisos)).value ?? const <Aviso>[];
+    // Datos guardados por falta de conexión, o una actualización manual que falló
+    final stale = overview.staleError ?? (refreshError == null ? null : toApiException(refreshError!));
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -113,10 +115,12 @@ class _PiersList extends ConsumerWidget {
         Text(formatUpdatedAgo(overview.updatedAt, now), style: muted),
         Text('Horarios programados, no ubicación en tiempo real.', style: muted),
         const SizedBox(height: EbSpacing.m),
-        if (refreshError != null) ...[
+        if (stale != null) ...[
           _InlineNote(
-            icon: Icons.wifi_off_rounded,
-            text: 'No se pudo actualizar. Estás viendo los datos anteriores.',
+            icon: stale.isOffline ? Icons.wifi_off_rounded : Icons.sync_problem_rounded,
+            text: stale.isOffline
+                ? 'Sin conexión. Estás viendo los datos guardados en tu teléfono.'
+                : 'No se pudo actualizar. Estás viendo los datos anteriores.',
           ),
           const SizedBox(height: EbSpacing.s),
         ],

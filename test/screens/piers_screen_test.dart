@@ -154,6 +154,13 @@ void main() {
     expect(repo.embarcaderosCalls, 2);
   });
 
+  testWidgets('Sin conexión con datos guardados: los muestra y lo dice', (tester) async {
+    await _pump(tester, FakeRepository(staleError: _offline));
+    expect(find.text('Sin conexión. Estás viendo los datos guardados en tu teléfono.'), findsOneWidget);
+    expect(find.byType(EbPierCard), findsWidgets);
+    expect(find.text('Sin conexión'), findsNothing, reason: 'No es la pantalla de error');
+  });
+
   testWidgets('Error del servidor: "No pudimos cargar los embarcaderos" con el mensaje de la API', (
     tester,
   ) async {

@@ -2,7 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:drift/native.dart';
 import 'package:easybus_app/providers/api_providers.dart';
+import 'package:easybus_app/providers/cache_providers.dart';
+import 'package:easybus_app/services/cache/app_database.dart';
 import 'package:easybus_app/providers/data_providers.dart';
 import 'package:easybus_app/providers/retry_policy.dart';
 import 'package:easybus_app/repositories/easybus_repository.dart';
@@ -50,6 +53,7 @@ void main() {
     final adapter = _FixtureAdapter();
     final container = ProviderContainer(
       overrides: [
+        appDatabaseProvider.overrideWithValue(AppDatabase(NativeDatabase.memory())),
         apiClientProvider.overrideWithValue(
           ApiClient(baseUrl: 'http://x/api/v1', dio: Dio()..httpClientAdapter = adapter),
         ),

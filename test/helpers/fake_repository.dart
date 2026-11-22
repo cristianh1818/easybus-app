@@ -14,6 +14,7 @@ import 'package:easybus_app/models/proxima_salida.dart';
 import 'package:easybus_app/models/ruta.dart';
 import 'package:easybus_app/repositories/easybus_repository.dart';
 import 'package:easybus_app/repositories/fetched.dart';
+import 'package:easybus_app/services/api_exception.dart';
 
 Object? readFixture(String name) => jsonDecode(File('test/fixtures/$name').readAsStringSync());
 
@@ -27,6 +28,7 @@ class FakeRepository implements EasybusRepository {
     this.avisosError,
     this.rutasError,
     this.proximaSalidaFixture = 'proxima_salida_next.json',
+    this.staleError,
   });
 
   /// null = los 8 embarcaderos del fixture real.
@@ -47,6 +49,9 @@ class FakeRepository implements EasybusRepository {
   /// Fallan solo las rutas (la lista de embarcaderos sí carga).
   Object? rutasError;
 
+  /// Si no es null, los datos llegan "de la caché" con este error (sin conexión).
+  ApiException? staleError;
+
   /// Respuesta de /proxima-salida que se devuelve (fixture).
   String proximaSalidaFixture;
 
@@ -65,7 +70,9 @@ class FakeRepository implements EasybusRepository {
 
   Stream<Fetched<T>> _stream<T>(T Function() value, {Object? failWith}) async* {
     final data = await _answer(value, failWith: failWith);
-    yield Fetched(data, updatedAt: updatedAt, origin: DataOrigin.network);
+    yield staleError == null
+        ? Fetched(data, updatedAt: updatedAt, origin: DataOrigin.network)
+        : Fetched(data, updatedAt: updatedAt, origin: DataOrigin.cache, refreshError: staleError);
   }
 
   @override
