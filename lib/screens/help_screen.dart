@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
+import '../widgets/eb_wrap_text.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -52,8 +53,8 @@ class HelpScreen extends StatelessWidget {
                 tilePadding: const EdgeInsets.symmetric(horizontal: EbSpacing.m),
                 childrenPadding: const EdgeInsets.fromLTRB(EbSpacing.m, 0, EbSpacing.m, EbSpacing.m),
                 expandedAlignment: Alignment.centerLeft,
-                title: Text(question, style: text.titleMedium),
-                children: [Text(answer, style: text.bodyMedium?.copyWith(color: EbColors.textMuted))],
+                title: EbWrapText(question, style: text.titleMedium),
+                children: [EbWrapText(answer, style: text.bodyMedium?.copyWith(color: EbColors.textMuted))],
               ),
             ),
           );

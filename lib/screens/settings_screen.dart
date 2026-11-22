@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
+import '../widgets/eb_wrap_text.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, this.openAppSettings = Geolocator.openAppSettings});
@@ -23,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: context.ebScrollPadding(),
         children: [
-          Semantics(header: true, child: Text('Tu ubicación y tu privacidad', style: text.titleLarge)),
+          Semantics(header: true, child: EbWrapText('Tu ubicación y tu privacidad', style: text.titleLarge)),
           const SizedBox(height: EbSpacing.m),
           const _Point(
             icon: Icons.phone_android_rounded,
@@ -99,9 +100,9 @@ class _Point extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: text.titleMedium),
+                    EbWrapText(title, style: text.titleMedium),
                     const SizedBox(height: EbSpacing.xs),
-                    Text(body, style: text.bodyMedium?.copyWith(color: EbColors.textMuted)),
+                    EbWrapText(body, style: text.bodyMedium?.copyWith(color: EbColors.textMuted)),
                   ],
                 ),
               ),

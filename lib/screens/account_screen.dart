@@ -1,11 +1,13 @@
-// Pestaña Cuenta (mockup "Inicio_de_sesion"). En la beta la cuenta es opcional;
-// el inicio de sesión llega más adelante y Gastos mensuales está fuera de la beta.
+// Pestaña Cuenta (mockup "Inicio_de_sesion"). En la beta la cuenta es opcional y el
+// inicio de sesión llega más adelante. Pagos, tarifas y control de gastos están fuera
+// de la beta (documento de infraestructura, 2.2), por eso no aparece "Gastos mensuales".
 
 import 'package:flutter/material.dart';
 
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
-import '../widgets/eb_menu_button.dart';
+import '../widgets/eb_screen_header.dart';
+import '../widgets/eb_wrap_text.dart';
 
 class AccountScreen extends StatelessWidget {
   const AccountScreen({super.key});
@@ -13,39 +15,40 @@ class AccountScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final top = MediaQuery.paddingOf(context).top;
 
     return ListView(
-      padding: context.ebScrollPadding(horizontal: 0, top: 0),
+      padding: context.ebScrollPadding(horizontal: 0, top: 0, bottom: EbSpacing.l),
       children: [
-        // Cabecera curva con el avatar, como el mockup
-        Stack(
-          children: [
-            ClipPath(
-              clipper: _CurvedBottom(),
-              child: Container(
-                color: EbColors.skeleton,
-                padding: EdgeInsets.only(top: top + EbSpacing.m, bottom: EbSpacing.xl),
-                child: Column(
-                  children: [
-                    Semantics(header: true, child: Text('Cuenta', style: text.headlineMedium)),
-                    const SizedBox(height: EbSpacing.m),
-                    const CircleAvatar(
+        // Cabecera curva de todo el ancho: ☰ y título en una fila, avatar centrado
+        ClipPath(
+          clipper: _CurvedBottom(),
+          child: ColoredBox(
+            color: EbColors.skeleton,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: EbSpacing.xl + EbSpacing.m),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // La lista tiene padding propio, así que el encabezado sigue
+                  // recibiendo el alto de la barra de estado y se coloca debajo
+                  const EbScreenHeader(title: 'Cuenta'),
+                  const SizedBox(height: EbSpacing.m),
+                  const Center(
+                    child: CircleAvatar(
                       radius: 52,
                       backgroundColor: EbColors.white,
                       child: Icon(Icons.person_outline_rounded, size: 64, color: EbColors.textPrimary),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const Positioned(top: 0, left: 0, child: EbMenuButton()),
-          ],
+          ),
         ),
         const SizedBox(height: EbSpacing.m),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: EbSpacing.m),
-          child: Text(
+          child: EbWrapText(
             'Puedes usar EASYBUS sin cuenta. Muy pronto podrás iniciar sesión para guardar tus '
             'embarcaderos favoritos y tus últimas consultas.',
             style: text.bodyMedium?.copyWith(color: EbColors.textMuted),
@@ -54,12 +57,13 @@ class AccountScreen extends StatelessWidget {
         const SizedBox(height: EbSpacing.m),
         const _ComingSoonTile(icon: Icons.login_rounded, label: 'Iniciar sesión o registrarse'),
         const _ComingSoonTile(icon: Icons.history_rounded, label: 'Tus últimas consultas'),
-        const _ComingSoonTile(icon: Icons.attach_money_rounded, label: 'Gastos mensuales'),
       ],
     );
   }
 }
 
+/// Opción que aún no está disponible: el título y, si no cabe al lado, la etiqueta
+/// "Próximamente" debajo (Wrap). Nunca parte palabras.
 class _ComingSoonTile extends StatelessWidget {
   const _ComingSoonTile({required this.icon, required this.label});
 
@@ -68,18 +72,51 @@ class _ComingSoonTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: EbSpacing.m, vertical: EbSpacing.xs),
       child: Card(
         child: Semantics(
           label: '$label. Próximamente',
           excludeSemantics: true,
-          child: ListTile(
-            enabled: false,
-            leading: Icon(icon, color: EbColors.textMuted),
-            title: Text(label, style: const TextStyle(color: EbColors.textMuted)),
-            trailing: const Chip(label: Text('Próximamente')),
+          child: Padding(
+            padding: const EdgeInsets.all(EbSpacing.m),
+            child: Row(
+              children: [
+                Icon(icon, color: EbColors.textMuted),
+                const SizedBox(width: EbSpacing.m),
+                Expanded(
+                  child: Wrap(
+                    spacing: EbSpacing.s,
+                    runSpacing: EbSpacing.xs,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      EbWrapText(label, style: text.titleMedium?.copyWith(color: EbColors.textMuted)),
+                      const _ComingSoonBadge(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ComingSoonBadge extends StatelessWidget {
+  const _ComingSoonBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(color: EbColors.surface, borderRadius: BorderRadius.circular(EbRadius.pill)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: EbSpacing.s + 4, vertical: EbSpacing.xs),
+        child: Text(
+          'Próximamente',
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: EbColors.textPrimary),
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import 'package:easybus_app/providers/clock_provider.dart';
+import 'package:easybus_app/providers/data_providers.dart';
 import 'package:easybus_app/screens/help_screen.dart';
 import 'package:easybus_app/screens/home_shell.dart';
 import 'package:easybus_app/screens/settings_screen.dart';
@@ -9,10 +11,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../helpers/fake_repository.dart';
 import '../helpers/layout_checks.dart';
 
-Future<void> _pumpShell(WidgetTester tester, {double scale = 1.0}) =>
-    pumpScreen(tester, const ProviderScope(child: HomeShell()), scale: scale);
+Future<void> _pumpShell(WidgetTester tester, {double scale = 1.0}) => pumpScreen(
+  tester,
+  ProviderScope(
+    overrides: [
+      easybusRepositoryProvider.overrideWithValue(FakeRepository()),
+      clockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 11, 10, 7, 3))),
+    ],
+    child: const HomeShell(),
+  ),
+  scale: scale,
+);
 
 Future<void> _openMenu(WidgetTester tester) async {
   await tester.tap(find.bySemanticsLabel('Abrir menú').first);
@@ -168,6 +180,6 @@ void main() {
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
     await tester.pumpAndSettle();
     final barTop = tester.getTopLeft(find.byType(EbBottomNav)).dy + EbBottomNav.bubbleOverflow;
-    expect(tester.getBottomLeft(find.text('Gastos mensuales')).dy, lessThan(barTop));
+    expect(tester.getBottomLeft(find.text('Tus últimas consultas')).dy, lessThan(barTop));
   });
 }

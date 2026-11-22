@@ -24,32 +24,47 @@ class FakeRepository implements EasybusRepository {
     this.delay = Duration.zero,
     this.error,
     this.never = false,
+    this.avisosError,
+    this.rutasError,
+    this.proximaSalidaFixture = 'proxima_salida_next.json',
   });
 
   /// null = los 8 embarcaderos del fixture real.
-  final List<Embarcadero>? embarcaderos;
+  List<Embarcadero>? embarcaderos;
   final List<Aviso> avisosList;
   final Duration delay;
 
-  /// Si no es null, todas las consultas fallan con este error.
-  final Object? error;
+  /// Si no es null, todas las consultas fallan con este error (se puede quitar para
+  /// probar "Reintentar").
+  Object? error;
 
   /// La consulta no termina nunca (para probar tiempos máximos).
   final bool never;
 
+  /// Falla solo la consulta de avisos.
+  Object? avisosError;
+
+  /// Fallan solo las rutas (la lista de embarcaderos sí carga).
+  Object? rutasError;
+
+  /// Respuesta de /proxima-salida que se devuelve (fixture).
+  String proximaSalidaFixture;
+
   int embarcaderosCalls = 0;
+  int proximaSalidaCalls = 0;
 
   static final updatedAt = DateTime(2026, 11, 10, 8);
 
-  Future<T> _answer<T>(T Function() value) async {
+  Future<T> _answer<T>(T Function() value, {Object? failWith}) async {
     if (never) return Completer<T>().future;
     if (delay > Duration.zero) await Future<void>.delayed(delay);
-    if (error != null) throw error!;
+    final e = error ?? failWith;
+    if (e != null) throw e;
     return value();
   }
 
-  Stream<Fetched<T>> _stream<T>(T Function() value) async* {
-    final data = await _answer(value);
+  Stream<Fetched<T>> _stream<T>(T Function() value, {Object? failWith}) async* {
+    final data = await _answer(value, failWith: failWith);
     yield Fetched(data, updatedAt: updatedAt, origin: DataOrigin.network);
   }
 
@@ -60,7 +75,8 @@ class FakeRepository implements EasybusRepository {
   }
 
   @override
-  Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) => _answer(() => avisosList);
+  Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) =>
+      _answer(() => avisosList, failWith: avisosError);
 
   @override
   Stream<Fetched<EmbarcaderoDetalle>> watchEmbarcadero(String id) =>
@@ -68,7 +84,7 @@ class FakeRepository implements EasybusRepository {
 
   @override
   Stream<Fetched<List<Ruta>>> watchRutas() =>
-      _stream(() => asJsonList(readFixture('rutas.json'), Ruta.fromJson));
+      _stream(() => asJsonList(readFixture('rutas.json'), Ruta.fromJson), failWith: rutasError);
 
   @override
   Stream<Fetched<RutaDetalle>> watchRuta(String id) =>
@@ -79,6 +95,8 @@ class FakeRepository implements EasybusRepository {
       _stream(() => HorariosSentido.fromJson(asJsonMap(readFixture('horarios.json'))));
 
   @override
-  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) =>
-      _answer(() => ProximaSalida.fromJson(asJsonMap(readFixture('proxima_salida_next.json'))));
+  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) {
+    proximaSalidaCalls++;
+    return _answer(() => ProximaSalida.fromJson(asJsonMap(readFixture(proximaSalidaFixture))));
+  }
 }

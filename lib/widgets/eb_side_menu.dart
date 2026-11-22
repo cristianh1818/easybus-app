@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/eb_tokens.dart';
 import '../widgets/eb_animated_logo.dart';
+import 'eb_wrap_text.dart';
 
 @immutable
 class EbMenuEntry {
@@ -90,7 +91,7 @@ class _MenuTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(entry.label, style: text.titleLarge?.copyWith(color: color)),
+                      EbWrapText(entry.label, style: text.titleLarge?.copyWith(color: color)),
                       if (entry.comingSoon) ...[
                         const SizedBox(height: EbSpacing.xs),
                         const _ComingSoonChip(),

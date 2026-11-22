@@ -12,6 +12,7 @@ import '../models/ruta.dart';
 import '../repositories/easybus_repository.dart';
 import '../repositories/fetched.dart';
 import 'api_providers.dart';
+import 'clock_provider.dart';
 
 final easybusRepositoryProvider = Provider<EasybusRepository>(
   (ref) => ApiEasybusRepository(ref.watch(easybusApiProvider)),
@@ -55,8 +56,15 @@ final avisosProvider = FutureProvider.autoDispose.family<List<Aviso>, AvisosArgs
 
 typedef ProximaSalidaArgs = ({String rutaId, Sentido sentido, String? desdeEmbarcaderoId});
 
-final proximaSalidaProvider = FutureProvider.autoDispose.family<ProximaSalida, ProximaSalidaArgs>(
-  (ref, a) => ref
+/// Próxima salida con la hora en que se consultó: la pantalla descuenta los minutos
+/// que pasan (con clockProvider) y vuelve a consultar cuando la salida ya pasó.
+final proximaSalidaProvider = FutureProvider.autoDispose.family<Fetched<ProximaSalida>, ProximaSalidaArgs>((
+  ref,
+  a,
+) async {
+  final now = ref.watch(nowProvider);
+  final p = await ref
       .watch(easybusRepositoryProvider)
-      .proximaSalida(a.rutaId, a.sentido, desdeEmbarcaderoId: a.desdeEmbarcaderoId),
-);
+      .proximaSalida(a.rutaId, a.sentido, desdeEmbarcaderoId: a.desdeEmbarcaderoId);
+  return Fetched(p, updatedAt: now(), origin: DataOrigin.network);
+});
