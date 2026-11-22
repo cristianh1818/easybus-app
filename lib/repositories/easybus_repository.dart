@@ -16,6 +16,8 @@ import '../models/ruta.dart';
 
 import 'package:flutter/foundation.dart';
 
+import '../domain/proxima_salida_local.dart';
+
 import '../services/api_exception.dart';
 import '../services/cache/response_cache.dart';
 import '../services/easybus_api.dart';
@@ -31,8 +33,15 @@ abstract interface class EasybusRepository {
   /// Siempre desde la API.
   Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId});
 
-  /// Siempre desde la API.
-  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId});
+  /// Primero la API (conoce los avisos de suspensión). Si no hay conexión o el
+  /// servidor no responde, la implementación con caché la calcula en el teléfono
+  /// (origin: cache, refreshError: el error de la API).
+  Future<Fetched<ProximaSalida>> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId});
+
+  /// Guarda en el teléfono lo necesario para calcular la próxima salida sin
+  /// conexión: horarios de cada sentido de [rutaIds] y festivos de ayer, hoy y
+  /// mañana. No falla: si no hay conexión, se intentará la próxima vez.
+  Future<void> prepareOffline({required List<String> rutaIds});
 }
 
 /// Implementación actual: todo desde la API, sin caché.
@@ -68,8 +77,17 @@ class ApiEasybusRepository implements EasybusRepository {
       _api.avisos(rutaId: rutaId, embarcaderoId: embarcaderoId);
 
   @override
-  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) =>
-      _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);
+  Future<Fetched<ProximaSalida>> proximaSalida(
+    String rutaId,
+    Sentido sentido, {
+    String? desdeEmbarcaderoId,
+  }) async {
+    final p = await _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);
+    return Fetched(p, updatedAt: _now(), origin: DataOrigin.network);
+  }
+
+  @override
+  Future<void> prepareOffline({required List<String> rutaIds}) async {}
 }
 
 /// Caché offline + API. Para embarcaderos, rutas y horarios:
@@ -140,8 +158,80 @@ class CachedEasybusRepository implements EasybusRepository {
   Future<List<Aviso>> avisos({String? rutaId, String? embarcaderoId}) =>
       _api.avisos(rutaId: rutaId, embarcaderoId: embarcaderoId);
 
-  /// Siempre desde la API: depende de la hora y de los festivos.
+  /// Primero la API. Sin conexión (o con el servidor caído) se calcula en el
+  /// teléfono con la ruta, los horarios y los festivos guardados; si falta alguno,
+  /// se muestra el error en vez de inventar una hora.
   @override
-  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) =>
-      _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);
+  Future<Fetched<ProximaSalida>> proximaSalida(
+    String rutaId,
+    Sentido sentido, {
+    String? desdeEmbarcaderoId,
+  }) async {
+    try {
+      final p = await _api.proximaSalida(rutaId, sentido, desdeEmbarcaderoId: desdeEmbarcaderoId);
+      return Fetched(p, updatedAt: _now(), origin: DataOrigin.network);
+    } on ApiException catch (e) {
+      if (!e.allowsOfflineFallback) rethrow;
+      final local = await _proximaSalidaLocal(rutaId, sentido, desdeEmbarcaderoId);
+      if (local == null) rethrow;
+      return Fetched(local, updatedAt: _now(), origin: DataOrigin.cache, refreshError: e);
+    }
+  }
+
+  Future<ProximaSalida?> _proximaSalidaLocal(String rutaId, Sentido sentido, String? desde) async {
+    final instante = _now();
+    final ruta = await _readSaved(ApiEndpoint.ruta(rutaId));
+    final horarios = await _readSaved(ApiEndpoint.horarios(rutaId, sentido));
+    if (ruta == null || horarios == null) return null;
+    final festivos = <String>{};
+    for (final anio in aniosNecesarios(instante)) {
+      final delAnio = await _readSaved(ApiEndpoint.festivos(anio));
+      // Sin los festivos no se puede saber si hoy aplica el horario de festivo
+      if (delAnio == null) return null;
+      festivos.addAll(delAnio.map((f) => f.fecha));
+    }
+    try {
+      return calcularProximaSalidaLocal(
+        ruta: ruta,
+        sentido: sentido,
+        desdeEmbarcaderoId: desde,
+        horarios: horarios.horarios,
+        festivos: festivos,
+        instante: instante,
+      );
+    } on StateError {
+      return null;
+    }
+  }
+
+  Future<T?> _readSaved<T>(ApiEndpoint<T> endpoint) async {
+    try {
+      final saved = await _cache.read(endpoint.cacheKey);
+      return saved == null ? null : endpoint.parse(saved.json);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// Lo guardado hace menos de esto no se vuelve a descargar en prepareOffline.
+  static const _offlineDataMaxAge = Duration(hours: 6);
+
+  @override
+  Future<void> prepareOffline({required List<String> rutaIds}) async {
+    final now = _now();
+    final endpoints = <ApiEndpoint<Object?>>[
+      for (final id in rutaIds)
+        for (final sentido in Sentido.values) ApiEndpoint.horarios(id, sentido),
+      for (final anio in aniosNecesarios(now)) ApiEndpoint.festivos(anio),
+    ];
+    for (final endpoint in endpoints) {
+      try {
+        final saved = await _cache.read(endpoint.cacheKey);
+        if (saved != null && now.difference(saved.updatedAt) < _offlineDataMaxAge) continue;
+        await _cacheThenNetwork(endpoint).drain<void>();
+      } on Object catch (e) {
+        debugPrint('[cache] no se pudo preparar ${endpoint.cacheKey}: $e');
+      }
+    }
+  }
 }

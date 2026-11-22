@@ -15,12 +15,14 @@ import '../models/transport_mode.dart';
 import '../providers/clock_provider.dart';
 import '../providers/data_providers.dart';
 import '../providers/errors.dart';
+import '../services/api_exception.dart';
 import '../providers/piers_providers.dart';
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../utils/time_format.dart';
 import '../widgets/eb_async_view.dart';
+import 'pier_detail_screen.dart';
 import '../widgets/eb_avisos_section.dart';
 import '../widgets/eb_next_departure_row.dart';
 import '../widgets/eb_pier_card.dart';
@@ -117,10 +119,13 @@ class _PiersList extends ConsumerWidget {
         const SizedBox(height: EbSpacing.m),
         if (stale != null) ...[
           _InlineNote(
-            icon: stale.isOffline ? Icons.wifi_off_rounded : Icons.sync_problem_rounded,
-            text: stale.isOffline
-                ? 'Sin conexión. Estás viendo los datos guardados en tu teléfono.'
-                : 'No se pudo actualizar. Estás viendo los datos anteriores.',
+            icon: stale.isOffline ? Icons.wifi_off_rounded : Icons.cloud_off_rounded,
+            text: switch (stale) {
+              ApiException(isOffline: true) =>
+                'Sin conexión a internet. Estás viendo los datos guardados en tu teléfono.',
+              ApiException(kind: ApiErrorKind.server) => 'El servicio no está disponible en este momento. Estás viendo los datos guardados en tu teléfono.',
+              _ => 'No se pudo actualizar. Estás viendo los datos anteriores.',
+            },
           ),
           const SizedBox(height: EbSpacing.s),
         ],
@@ -149,6 +154,9 @@ class _PiersList extends ConsumerWidget {
             showSampleTag: !overview.allSampleData,
             departureBuilder: (service) =>
                 EbNextDepartureRow(service: service, embarcaderoId: item.embarcadero.id),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => PierDetailScreen(embarcadero: item.embarcadero))),
           ),
           const SizedBox(height: EbSpacing.s),
         ],

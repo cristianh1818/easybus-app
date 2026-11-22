@@ -11,14 +11,19 @@ import '../models/proxima_salida.dart';
 import '../providers/clock_provider.dart';
 import '../providers/data_providers.dart';
 import '../providers/piers_providers.dart';
+import '../repositories/fetched.dart';
 import '../theme/eb_tokens.dart';
 import '../utils/time_format.dart';
 
 class EbNextDepartureRow extends ConsumerWidget {
-  const EbNextDepartureRow({super.key, required this.service, required this.embarcaderoId});
+  const EbNextDepartureRow({super.key, required this.service, required this.embarcaderoId, this.label});
 
   final PierService service;
   final String embarcaderoId;
+
+  /// Texto a la izquierda. Por defecto "BS-1 · Hacia …"; en el detalle, donde la
+  /// ruta y el destino ya están en el encabezado, "Próximo zarpe".
+  final String? label;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,11 +40,14 @@ class EbNextDepartureRow extends ConsumerWidget {
       _ => ('00:00 · en 00 min', EbColors.textMuted, false),
     };
     final loading = !value.hasValue && !value.hasError;
+    // Sin conexión: calculada en el teléfono con los horarios guardados
+    final local = value.value?.origin == DataOrigin.cache;
+    const localNote = 'Calculado en tu teléfono, sin conexión';
 
     final text = Theme.of(context).textTheme;
     return Semantics(
       container: true,
-      label: '${service.rutaCodigo}, hacia ${service.destino}: $detail',
+      label: '${service.rutaCodigo}, hacia ${service.destino}: $detail${local ? '. $localNote' : ''}',
       excludeSemantics: true,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: EbSpacing.xs),
@@ -49,18 +57,21 @@ class EbNextDepartureRow extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           alignment: WrapAlignment.spaceBetween,
           children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${service.rutaCodigo} · ',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  TextSpan(text: 'Hacia ${service.destino}'),
-                ],
+            if (label != null)
+              Text(label!, style: text.bodyMedium?.copyWith(color: EbColors.textMuted))
+            else
+              Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${service.rutaCodigo} · ',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    TextSpan(text: 'Hacia ${service.destino}'),
+                  ],
+                ),
+                style: text.bodyMedium?.copyWith(color: EbColors.textMuted),
               ),
-              style: text.bodyMedium?.copyWith(color: EbColors.textMuted),
-            ),
             Skeletonizer(
               enabled: loading,
               child: AnimatedSwitcher(
@@ -75,6 +86,7 @@ class EbNextDepartureRow extends ConsumerWidget {
                 ),
               ),
             ),
+            if (local) Text(localNote, style: text.bodySmall?.copyWith(color: EbColors.textMuted)),
           ],
         ),
       ),

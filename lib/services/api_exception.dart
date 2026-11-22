@@ -55,8 +55,13 @@ class ApiException implements Exception {
     _ => false,
   };
 
-  /// Sin conexión o tiempo agotado: la pantalla puede mostrar los datos en caché.
+  /// Sin conexión a internet o tiempo agotado.
   bool get isOffline => kind == ApiErrorKind.noConnection || kind == ApiErrorKind.timeout;
+
+  /// No se pudo hablar con el servidor (sin internet, tiempo agotado o servicio no
+  /// disponible): se pueden usar los datos guardados y el cálculo en el teléfono.
+  /// Un error 4xx (datos inválidos, no encontrado) no: hay que mostrarlo.
+  bool get allowsOfflineFallback => isOffline || kind == ApiErrorKind.server;
 
   @override
   String toString() => 'ApiException($code, ${statusCode ?? '-'}): $message';

@@ -11,6 +11,7 @@
 import '../models/aviso.dart';
 import '../models/embarcadero.dart';
 import '../models/enums.dart';
+import '../models/festivo.dart';
 import '../models/horario.dart';
 import '../models/json.dart';
 import '../models/proxima_salida.dart';
@@ -70,6 +71,14 @@ class ApiEndpoint<T> {
     '/embarcaderos/${_seg(id)}',
     (j) => EmbarcaderoDetalle.fromJson(asJsonMap(j)),
     cacheKey: 'embarcadero/$id',
+  );
+
+  /// GET /festivos?anio=: para calcular la próxima salida sin conexión.
+  static ApiEndpoint<List<Festivo>> festivos(int anio) => ApiEndpoint._(
+    '/festivos',
+    (j) => asJsonList(j, Festivo.fromJson),
+    query: {'anio': anio},
+    cacheKey: 'festivos/$anio',
   );
 
   /// GET /avisos (no se guarda en la caché: un aviso viejo podría ser peligroso).

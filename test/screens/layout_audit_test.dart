@@ -41,13 +41,16 @@ Future<void> _selectTab(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-/// Desplaza la pestaña visible hasta el final.
+/// Desplaza la pestaña visible hasta el final real de la lista (arrastrando, como
+/// el usuario), sin importar lo larga que sea.
 Future<void> _scrollToEnd(WidgetTester tester) async {
   final scrollable = find.byType(Scrollable).hitTestable().first;
-  for (var i = 0; i < 6; i++) {
+  final position = tester.state<ScrollableState>(scrollable).position;
+  for (var i = 0; i < 40 && position.pixels < position.maxScrollExtent; i++) {
     await tester.drag(scrollable, const Offset(0, -600));
     await tester.pumpAndSettle();
   }
+  expect(position.pixels, position.maxScrollExtent, reason: 'No se llegó al final de la lista');
 }
 
 double _navBarTop(WidgetTester tester) =>

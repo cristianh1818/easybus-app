@@ -14,6 +14,7 @@ import 'package:easybus_app/models/proxima_salida.dart';
 import 'package:easybus_app/models/ruta.dart';
 import 'package:easybus_app/repositories/easybus_repository.dart';
 import 'package:easybus_app/repositories/fetched.dart';
+import 'package:easybus_app/services/api_client.dart';
 import 'package:easybus_app/services/api_exception.dart';
 
 Object? readFixture(String name) => jsonDecode(File('test/fixtures/$name').readAsStringSync());
@@ -101,9 +102,23 @@ class FakeRepository implements EasybusRepository {
   Stream<Fetched<HorariosSentido>> watchHorarios(String rutaId, Sentido sentido, {TipoDia? tipoDia}) =>
       _stream(() => HorariosSentido.fromJson(asJsonMap(readFixture('horarios.json'))));
 
+  /// Si es true, la próxima salida llega "calculada en el teléfono" (origin: cache).
+  bool proximaSalidaLocal = false;
+  int prepareOfflineCalls = 0;
+
   @override
-  Future<ProximaSalida> proximaSalida(String rutaId, Sentido sentido, {String? desdeEmbarcaderoId}) {
+  Future<Fetched<ProximaSalida>> proximaSalida(
+    String rutaId,
+    Sentido sentido, {
+    String? desdeEmbarcaderoId,
+  }) async {
     proximaSalidaCalls++;
-    return _answer(() => ProximaSalida.fromJson(asJsonMap(readFixture(proximaSalidaFixture))));
+    final p = await _answer(() => ProximaSalida.fromJson(asJsonMap(readFixture(proximaSalidaFixture))));
+    return proximaSalidaLocal
+        ? Fetched(p, updatedAt: updatedAt, origin: DataOrigin.cache, refreshError: ApiClient.noInternet)
+        : Fetched(p, updatedAt: updatedAt, origin: DataOrigin.network);
   }
+
+  @override
+  Future<void> prepareOffline({required List<String> rutaIds}) async => prepareOfflineCalls++;
 }

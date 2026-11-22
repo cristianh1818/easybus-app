@@ -2,6 +2,8 @@
 // los que sale una embarcación desde él, ordenados a lo largo del río (orden de la
 // ruta en el sentido de ida).
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,6 +84,9 @@ final piersOverviewProvider = FutureProvider.family<PiersOverview, TransportMode
     final detalles = await Future.wait([
       for (final r in activas) ref.watch(rutaDetalleProvider(r.id).future),
     ]);
+
+    // En segundo plano: guarda horarios y festivos para calcular zarpes sin conexión
+    unawaited(ref.read(easybusRepositoryProvider).prepareOffline(rutaIds: [for (final r in activas) r.id]));
 
     for (final detalle in detalles) {
       if (detalle.updatedAt.isBefore(updatedAt)) updatedAt = detalle.updatedAt;

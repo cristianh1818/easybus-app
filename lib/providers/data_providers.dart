@@ -64,13 +64,9 @@ typedef ProximaSalidaArgs = ({String rutaId, Sentido sentido, String? desdeEmbar
 
 /// Próxima salida con la hora en que se consultó: la pantalla descuenta los minutos
 /// que pasan (con clockProvider) y vuelve a consultar cuando la salida ya pasó.
-final proximaSalidaProvider = FutureProvider.autoDispose.family<Fetched<ProximaSalida>, ProximaSalidaArgs>((
-  ref,
-  a,
-) async {
-  final now = ref.watch(nowProvider);
-  final p = await ref
+/// Sin conexión viene calculada en el teléfono (origin: cache).
+final proximaSalidaProvider = FutureProvider.autoDispose.family<Fetched<ProximaSalida>, ProximaSalidaArgs>(
+  (ref, a) => ref
       .watch(easybusRepositoryProvider)
-      .proximaSalida(a.rutaId, a.sentido, desdeEmbarcaderoId: a.desdeEmbarcaderoId);
-  return Fetched(p, updatedAt: now(), origin: DataOrigin.network);
-});
+      .proximaSalida(a.rutaId, a.sentido, desdeEmbarcaderoId: a.desdeEmbarcaderoId),
+);

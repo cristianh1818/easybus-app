@@ -1,0 +1,830 @@
+[
+ {
+  "nombre": "laboral, origen",
+  "momento": "2026-11-10T07:03",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "07:03",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "07:30",
+   "originDepartureTime": "07:30",
+   "minutesRemaining": 27,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 07:30, en 27 min."
+  }
+ },
+ {
+  "nombre": "laboral, intermedio",
+  "momento": "2026-11-10T07:03",
+  "sentido": "ida",
+  "desde": "97174789-862e-4bdc-8461-8a9be344201c",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "97174789-862e-4bdc-8461-8a9be344201c",
+    "name": "Embarcadero Calle 37",
+    "order": 2,
+    "isOrigin": false,
+    "minutesFromOrigin": 12,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "07:03",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "07:12",
+   "originDepartureTime": "07:00",
+   "minutesRemaining": 9,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Calle 37 a las 07:12, en 9 min."
+  }
+ },
+ {
+  "nombre": "laboral, justo a la hora",
+  "momento": "2026-11-10T05:30",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "05:30",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "05:30",
+   "originDepartureTime": "05:30",
+   "minutesRemaining": 0,
+   "crossesMidnight": false,
+   "message": "La embarcación sale ahora (05:30)."
+  }
+ },
+ {
+  "nombre": "laboral, madrugada",
+  "momento": "2026-11-10T00:10",
+  "sentido": "ida",
+  "desde": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+    "name": "Embarcadero Sur",
+    "order": 5,
+    "isOrigin": false,
+    "minutesFromOrigin": 60,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "00:10",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "06:30",
+   "originDepartureTime": "05:30",
+   "minutesRemaining": 380,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Sur a las 06:30, en 380 min."
+  }
+ },
+ {
+  "nombre": "laboral, después de la última",
+  "momento": "2026-11-10T23:50",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "23:50",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2026-11-11",
+    "dayType": "WEEKDAY",
+    "departureTime": "05:30",
+    "originDepartureTime": "05:30"
+   }
+  }
+ },
+ {
+  "nombre": "laboral, después de la última, intermedio",
+  "momento": "2026-11-10T23:50",
+  "sentido": "ida",
+  "desde": "97174789-862e-4bdc-8461-8a9be344201c",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "97174789-862e-4bdc-8461-8a9be344201c",
+    "name": "Embarcadero Calle 37",
+    "order": 2,
+    "isOrigin": false,
+    "minutesFromOrigin": 12,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "23:50",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy desde el Embarcadero Calle 37.",
+   "nextDayFirstDeparture": {
+    "date": "2026-11-11",
+    "dayType": "WEEKDAY",
+    "departureTime": "05:42",
+    "originDepartureTime": "05:30"
+   }
+  }
+ },
+ {
+  "nombre": "laboral, vuelta intermedio",
+  "momento": "2026-11-10T12:47",
+  "sentido": "vuelta",
+  "desde": "f026caf0-ec8a-4115-8246-76e1fddc06f9",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "vuelta",
+   "destination": "Embarcadero Ronda Norte",
+   "fromStop": {
+    "id": "f026caf0-ec8a-4115-8246-76e1fddc06f9",
+    "name": "Embarcadero Corrección",
+    "order": 2,
+    "isOrigin": false,
+    "minutesFromOrigin": 14,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-10",
+   "localTime": "12:47",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-10-29T15:10:22-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "12:59",
+   "originDepartureTime": "12:45",
+   "minutesRemaining": 12,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Corrección a las 12:59, en 12 min."
+  }
+ },
+ {
+  "nombre": "sábado, origen",
+  "momento": "2026-11-14T10:00",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SATURDAY",
+   "localDate": "2026-11-14",
+   "localTime": "10:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "10:00",
+   "originDepartureTime": "10:00",
+   "minutesRemaining": 0,
+   "crossesMidnight": false,
+   "message": "La embarcación sale ahora (10:00)."
+  }
+ },
+ {
+  "nombre": "sábado, vuelta",
+  "momento": "2026-11-14T16:20",
+  "sentido": "vuelta",
+  "desde": "97174789-862e-4bdc-8461-8a9be344201c",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "vuelta",
+   "destination": "Embarcadero Ronda Norte",
+   "fromStop": {
+    "id": "97174789-862e-4bdc-8461-8a9be344201c",
+    "name": "Embarcadero Calle 37",
+    "order": 4,
+    "isOrigin": false,
+    "minutesFromOrigin": 32,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SATURDAY",
+   "localDate": "2026-11-14",
+   "localTime": "16:20",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-10-29T15:10:22-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "17:02",
+   "originDepartureTime": "16:30",
+   "minutesRemaining": 42,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Calle 37 a las 17:02, en 42 min."
+  }
+ },
+ {
+  "nombre": "sábado, después de la última",
+  "momento": "2026-11-14T23:30",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SATURDAY",
+   "localDate": "2026-11-14",
+   "localTime": "23:30",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2026-11-15",
+    "dayType": "SUNDAY_HOLIDAY",
+    "departureTime": "07:00",
+    "originDepartureTime": "07:00"
+   }
+  }
+ },
+ {
+  "nombre": "domingo, origen",
+  "momento": "2026-11-15T09:00",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-15",
+   "localTime": "09:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "10:00",
+   "originDepartureTime": "10:00",
+   "minutesRemaining": 60,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 10:00, en 60 min."
+  }
+ },
+ {
+  "nombre": "domingo, después de la última (mañana es festivo)",
+  "momento": "2026-11-15T23:55",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-15",
+   "localTime": "23:55",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2026-11-16",
+    "dayType": "SUNDAY_HOLIDAY",
+    "departureTime": "07:00",
+    "originDepartureTime": "07:00"
+   }
+  }
+ },
+ {
+  "nombre": "lunes festivo, origen",
+  "momento": "2026-11-16T08:00",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-16",
+   "localTime": "08:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "08:30",
+   "originDepartureTime": "08:30",
+   "minutesRemaining": 30,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 08:30, en 30 min."
+  }
+ },
+ {
+  "nombre": "lunes festivo, intermedio",
+  "momento": "2026-11-16T08:00",
+  "sentido": "ida",
+  "desde": "97174789-862e-4bdc-8461-8a9be344201c",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "97174789-862e-4bdc-8461-8a9be344201c",
+    "name": "Embarcadero Calle 37",
+    "order": 2,
+    "isOrigin": false,
+    "minutesFromOrigin": 12,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-16",
+   "localTime": "08:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "08:42",
+   "originDepartureTime": "08:30",
+   "minutesRemaining": 42,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Calle 37 a las 08:42, en 42 min."
+  }
+ },
+ {
+  "nombre": "lunes festivo, vuelta",
+  "momento": "2026-11-16T15:10",
+  "sentido": "vuelta",
+  "desde": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "vuelta",
+   "destination": "Embarcadero Ronda Norte",
+   "fromStop": {
+    "id": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+    "name": "Embarcadero Sur",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-16",
+   "localTime": "15:10",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-10-29T15:10:22-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "16:30",
+   "originDepartureTime": "16:30",
+   "minutesRemaining": 80,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 16:30, en 80 min."
+  }
+ },
+ {
+  "nombre": "lunes festivo, después de la última",
+  "momento": "2026-11-16T23:59",
+  "sentido": "vuelta",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "vuelta",
+   "destination": "Embarcadero Ronda Norte",
+   "fromStop": {
+    "id": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+    "name": "Embarcadero Sur",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-11-16",
+   "localTime": "23:59",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-10-29T15:10:22-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2026-11-17",
+    "dayType": "WEEKDAY",
+    "departureTime": "05:45",
+    "originDepartureTime": "05:45"
+   }
+  }
+ },
+ {
+  "nombre": "martes tras festivo, madrugada",
+  "momento": "2026-11-17T00:01",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-11-17",
+   "localTime": "00:01",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "05:30",
+   "originDepartureTime": "05:30",
+   "minutesRemaining": 329,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 05:30, en 329 min."
+  }
+ },
+ {
+  "nombre": "jueves santo",
+  "momento": "2026-04-02T06:00",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-04-02",
+   "localTime": "06:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "07:00",
+   "originDepartureTime": "07:00",
+   "minutesRemaining": 60,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 07:00, en 60 min."
+  }
+ },
+ {
+  "nombre": "31 de diciembre de noche",
+  "momento": "2026-12-31T23:30",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-12-31",
+   "localTime": "23:30",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2027-01-01",
+    "dayType": "WEEKDAY",
+    "departureTime": "05:30",
+    "originDepartureTime": "05:30"
+   }
+  }
+ },
+ {
+  "nombre": "7 de diciembre (lunes)",
+  "momento": "2026-12-07T05:00",
+  "sentido": "vuelta",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "vuelta",
+   "destination": "Embarcadero Ronda Norte",
+   "fromStop": {
+    "id": "382e3c89-48f5-4f9f-945f-34eebbbd2ec2",
+    "name": "Embarcadero Sur",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-12-07",
+   "localTime": "05:00",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-10-29T15:10:22-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "05:45",
+   "originDepartureTime": "05:45",
+   "minutesRemaining": 45,
+   "crossesMidnight": false,
+   "message": "Próxima salida a las 05:45, en 45 min."
+  }
+ },
+ {
+  "nombre": "8 de diciembre (festivo)",
+  "momento": "2026-12-08T11:11",
+  "sentido": "ida",
+  "desde": "97174789-862e-4bdc-8461-8a9be344201c",
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "97174789-862e-4bdc-8461-8a9be344201c",
+    "name": "Embarcadero Calle 37",
+    "order": 2,
+    "isOrigin": false,
+    "minutesFromOrigin": 12,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "SUNDAY_HOLIDAY",
+   "localDate": "2026-12-08",
+   "localTime": "11:11",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NEXT_DEPARTURE",
+   "departureTime": "11:42",
+   "originDepartureTime": "11:30",
+   "minutesRemaining": 31,
+   "crossesMidnight": false,
+   "message": "Próxima salida desde el Embarcadero Calle 37 a las 11:42, en 31 min."
+  }
+ },
+ {
+  "nombre": "víspera de festivo, tarde",
+  "momento": "2026-12-07T20:45",
+  "sentido": "ida",
+  "desde": null,
+  "respuesta": {
+   "route": {
+    "id": "54169054-7fad-4f70-afd8-7c568855abff",
+    "code": "BS-1",
+    "name": "Ronda Norte – Sur"
+   },
+   "direction": "ida",
+   "destination": "Embarcadero Sur",
+   "fromStop": {
+    "id": "62cc0cb9-1ca6-48c3-9c13-aa726876c2ad",
+    "name": "Embarcadero Ronda Norte",
+    "order": 1,
+    "isOrigin": true,
+    "minutesFromOrigin": 0,
+    "isEstimatedTime": true
+   },
+   "isScheduled": true,
+   "dayType": "WEEKDAY",
+   "localDate": "2026-12-07",
+   "localTime": "20:45",
+   "timeZone": "America/Bogota",
+   "scheduleUpdatedAt": "2026-11-10T01:15:06-05:00",
+   "notice": "Hora estimada según el horario programado. No corresponde a la ubicación real de la embarcación.",
+   "alerts": [],
+   "status": "NO_MORE_DEPARTURES_TODAY",
+   "message": "No hay más salidas programadas hoy.",
+   "nextDayFirstDeparture": {
+    "date": "2026-12-08",
+    "dayType": "SUNDAY_HOLIDAY",
+    "departureTime": "07:00",
+    "originDepartureTime": "07:00"
+   }
+  }
+ }
+]

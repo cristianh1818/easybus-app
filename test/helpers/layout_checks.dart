@@ -31,7 +31,15 @@ Future<void> _loadPoppins() async {
 
 /// Monta [screen] en el teléfono pequeño con la escala [scale].
 /// Cualquier desbordamiento (RenderFlex overflowed…) hace fallar la prueba.
-Future<void> pumpScreen(WidgetTester tester, Widget screen, {double scale = 1.0, bool settle = true}) async {
+/// [wrapApp] permite envolver el MaterialApp completo (p. ej. con un ProviderScope
+/// para que también lo usen las pantallas que se abren al navegar).
+Future<void> pumpScreen(
+  WidgetTester tester,
+  Widget screen, {
+  double scale = 1.0,
+  bool settle = true,
+  Widget Function(Widget app)? wrapApp,
+}) async {
   await tester.runAsync(_loadPoppins);
   tester.view.devicePixelRatio = 1.0;
   tester.view.physicalSize = smallPhone;
@@ -41,7 +49,8 @@ Future<void> pumpScreen(WidgetTester tester, Widget screen, {double scale = 1.0,
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-  await tester.pumpWidget(MaterialApp(theme: EbTheme.light(), home: screen));
+  final app = MaterialApp(theme: EbTheme.light(), home: screen);
+  await tester.pumpWidget(wrapApp == null ? app : wrapApp(app));
   if (settle) await tester.pumpAndSettle();
 }
 

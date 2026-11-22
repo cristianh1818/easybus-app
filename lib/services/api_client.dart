@@ -5,9 +5,10 @@
 // "cerca de mí" se calcula en el teléfono con la lista de /embarcaderos, por eso
 // este cliente no expone /embarcaderos/cercanos.
 
-import 'dart:io' show SocketException;
+import 'dart:io' show HttpClient, HttpException, SocketException;
 
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_exception.dart';
@@ -29,6 +30,15 @@ class ApiClient {
             ),
           ) {
     _dio.options.baseUrl = baseUrl;
+    if (dio == null) {
+      // El servidor (Node) cierra las conexiones inactivas a los 5 s ("Keep-Alive:
+      // timeout=5"), pero Dart las reutiliza hasta 15 s. A través de adb reverse (y en
+      // algunas redes móviles) el teléfono no se entera del cierre y la siguiente
+      // consulta sale por una conexión muerta. Se descartan antes: a los 3 s.
+      _dio.httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () => HttpClient()..idleTimeout = const Duration(seconds: 3),
+      );
+    }
     if (kDebugMode) _dio.interceptors.add(_DebugLog());
   }
 
@@ -45,13 +55,19 @@ class ApiClient {
     CancelToken? cancelToken,
   }) async {
     assert(path.startsWith('/'), 'La ruta debe empezar con "/": $path');
-    final Response<Object?> response;
+    Future<Response<Object?>> send() =>
+        _dio.get<Object?>(path, queryParameters: _withoutNulls(query), cancelToken: cancelToken);
+    Response<Object?> response;
     try {
-      response = await _dio.get<Object?>(
-        path,
-        queryParameters: _withoutNulls(query),
-        cancelToken: cancelToken,
-      );
+      try {
+        response = await send();
+      } on DioException catch (e) {
+        // Conexión reutilizada que el servidor ya había cerrado: un GET se puede
+        // repetir sin riesgo, una sola vez y con una conexión nueva.
+        if (!isBrokenConnection(e)) rethrow;
+        debugPrint('[api] conexión cortada en $path; se reintenta una vez');
+        response = await send();
+      }
     } on DioException catch (e) {
       throw mapDioException(e);
     }
@@ -79,6 +95,22 @@ class ApiClient {
     };
   }
 
+  /// La conexión se cortó a mitad de la consulta (no es "sin internet" ni un error
+  /// del servidor): típico de una conexión keep-alive que el servidor ya cerró.
+  @visibleForTesting
+  static bool isBrokenConnection(DioException e) {
+    final error = e.error;
+    if (error is HttpException) return true; // "Connection closed before full header…"
+    if (error is SocketException) {
+      final code = error.osError?.errorCode;
+      final text = error.message.toLowerCase();
+      return const {104, 54, 10054, 32}.contains(code) ||
+          text.contains('reset') ||
+          text.contains('broken pipe');
+    }
+    return false;
+  }
+
   /// Traduce un DioException al error único de la app.
   @visibleForTesting
   static ApiException mapDioException(DioException e) {
@@ -93,7 +125,7 @@ class ApiClient {
           message: 'El servidor está tardando demasiado en responder. Intenta de nuevo.',
         );
       case DioExceptionType.connectionError:
-        return _noConnection;
+        return _fromConnectionError(e.error);
       case DioExceptionType.badCertificate:
         return const ApiException(
           kind: ApiErrorKind.insecure,
@@ -109,7 +141,7 @@ class ApiClient {
       case DioExceptionType.badResponse:
         return _fromResponse(e.response);
       case DioExceptionType.unknown:
-        if (e.error is SocketException) return _noConnection;
+        if (e.error is SocketException || e.error is HttpException) return _fromConnectionError(e.error);
         return const ApiException(
           kind: ApiErrorKind.unknown,
           code: 'ERROR_DESCONOCIDO',
@@ -118,11 +150,38 @@ class ApiClient {
     }
   }
 
-  static const _noConnection = ApiException(
+  /// El teléfono no llega a la red (sin datos ni Wi-Fi, DNS que no responde…).
+  static const noInternet = ApiException(
     kind: ApiErrorKind.noConnection,
     code: 'SIN_CONEXION',
-    message: 'No hay conexión con EASYBUS. Revisa tu internet e intenta de nuevo.',
+    message: 'Sin conexión a internet. Revisa tus datos o tu Wi-Fi e intenta de nuevo.',
   );
+
+  /// Hay red, pero el servidor de EASYBUS rechaza o corta la conexión (caído,
+  /// reiniciándose…). Mismo texto que un 5xx.
+  static const serviceUnavailable = ApiException(
+    kind: ApiErrorKind.server,
+    code: 'SERVICIO_NO_DISPONIBLE',
+    message: 'El servicio no está disponible en este momento. Intenta más tarde.',
+  );
+
+  // Códigos del sistema para "conexión rechazada" y "conexión cortada" en Android,
+  // iOS/macOS, Linux y Windows: el equipo del servidor respondió, así que sí hay red.
+  static const _refusedOrReset = {111, 104, 61, 54, 10061, 10054, 1225, 1236};
+
+  static ApiException _fromConnectionError(Object? error) {
+    if (error is SocketException) {
+      final code = error.osError?.errorCode;
+      final text = '${error.message} ${error.osError?.message ?? ''}'.toLowerCase();
+      if (_refusedOrReset.contains(code) || text.contains('refused') || text.contains('reset')) {
+        return serviceUnavailable;
+      }
+      return noInternet;
+    }
+    // "Connection closed before full header was received": el servidor cortó
+    if (error is HttpException) return serviceUnavailable;
+    return noInternet;
+  }
 
   // Errores de la API: { statusCode, code, message, errores? }. Si el cuerpo no tiene
   // esa forma (p. ej. una página HTML de Nginx con un 502), se usa un mensaje genérico.

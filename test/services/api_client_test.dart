@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -101,14 +102,70 @@ void main() {
     expect(e.isRetryable, isTrue);
   });
 
-  test('Sin conexión: SIN_CONEXION, reintentable y se puede usar la caché', () async {
+  test('Sin internet (DNS que no responde): "Sin conexión a internet"', () async {
     final (api, _) = _client(
-      (o) async => throw DioException.connectionError(requestOptions: o, reason: 'Connection refused'),
+      (o) async => throw DioException.connectionError(
+        requestOptions: o,
+        reason: 'Failed host lookup',
+        error: const SocketException('Failed host lookup: api.easybus.co', osError: OSError('No address', 7)),
+      ),
     );
     final e = await _error(api.get('/rutas', parse: (j) => j));
     expect(e.code, 'SIN_CONEXION');
-    expect(e.isRetryable, isTrue);
+    expect(e.message, startsWith('Sin conexión a internet'));
     expect(e.isOffline, isTrue);
+    expect(e.allowsOfflineFallback, isTrue);
+  });
+
+  test('Conexión rechazada (servidor caído): "El servicio no está disponible"', () async {
+    for (final code in [111, 10061, 1225]) {
+      final (api, _) = _client(
+        (o) async => throw DioException.connectionError(
+          requestOptions: o,
+          reason: 'refused',
+          error: SocketException('Connection refused', osError: OSError('refused', code)),
+        ),
+      );
+      final e = await _error(api.get('/rutas', parse: (j) => j));
+      expect(e.code, 'SERVICIO_NO_DISPONIBLE', reason: 'errno $code');
+      expect(e.message, 'El servicio no está disponible en este momento. Intenta más tarde.');
+      expect(e.isOffline, isFalse);
+      expect(e.isRetryable, isTrue);
+      expect(e.allowsOfflineFallback, isTrue);
+    }
+  });
+
+  test('El servidor corta la conexión (adb reverse sin API): servicio no disponible', () async {
+    final (api, _) = _client(
+      (o) async => throw DioException(
+        requestOptions: o,
+        error: const HttpException('Connection closed before full header was received'),
+      ),
+    );
+    final e = await _error(api.get('/rutas', parse: (j) => j));
+    expect(e.code, 'SERVICIO_NO_DISPONIBLE');
+  });
+
+  test('Conexión keep-alive ya cerrada por el servidor: se reintenta una vez y funciona', () async {
+    // Error del celular con adb reverse: el detalle del 2.º embarcadero fallaba
+    var intentos = 0;
+    final (api, _) = _client((o) async {
+      intentos++;
+      if (intentos == 1) {
+        throw DioException(
+          requestOptions: o,
+          error: const HttpException('Connection closed before full header was received'),
+        );
+      }
+      return _json([], 200);
+    });
+    expect(await api.get('/avisos', parse: (j) => j), isEmpty);
+    expect(intentos, 2);
+  });
+
+  test('Un error 4xx no permite usar datos guardados', () {
+    const e = ApiException(kind: ApiErrorKind.client, code: 'X', message: 'x', statusCode: 404);
+    expect(e.allowsOfflineFallback, isFalse);
   });
 
   test('Tiempo agotado', () async {

@@ -26,7 +26,16 @@ class EbStateMessage extends StatelessWidget {
     if (error.isOffline) {
       return EbStateMessage(
         icon: Icons.wifi_off_rounded,
-        title: 'Sin conexión',
+        title: 'Sin conexión a internet',
+        message: error.message,
+        actionLabel: 'Reintentar',
+        onAction: onRetry,
+      );
+    }
+    if (error.kind == ApiErrorKind.server) {
+      return EbStateMessage(
+        icon: Icons.cloud_off_rounded,
+        title: 'El servicio no está disponible',
         message: error.message,
         actionLabel: 'Reintentar',
         onAction: onRetry,

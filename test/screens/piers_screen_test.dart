@@ -20,7 +20,7 @@ final _now = DateTime(2026, 11, 10, 7, 3);
 const _offline = ApiException(
   kind: ApiErrorKind.noConnection,
   code: 'SIN_CONEXION',
-  message: 'No hay conexión con EASYBUS. Revisa tu internet e intenta de nuevo.',
+  message: 'Sin conexión a internet. Revisa tus datos o tu Wi-Fi e intenta de nuevo.',
 );
 const _serverDown = ApiException(
   kind: ApiErrorKind.server,
@@ -144,7 +144,7 @@ void main() {
   testWidgets('Sin conexión: mensaje propio y Reintentar que vuelve a consultar', (tester) async {
     final repo = FakeRepository(error: _offline);
     await _pump(tester, repo);
-    expect(find.text('Sin conexión'), findsOneWidget);
+    expect(find.text('Sin conexión a internet'), findsOneWidget);
     expect(find.text(_offline.message), findsOneWidget);
 
     repo.error = null;
@@ -156,18 +156,46 @@ void main() {
 
   testWidgets('Sin conexión con datos guardados: los muestra y lo dice', (tester) async {
     await _pump(tester, FakeRepository(staleError: _offline));
-    expect(find.text('Sin conexión. Estás viendo los datos guardados en tu teléfono.'), findsOneWidget);
+    expect(
+      find.text('Sin conexión a internet. Estás viendo los datos guardados en tu teléfono.'),
+      findsOneWidget,
+    );
     expect(find.byType(EbPierCard), findsWidgets);
-    expect(find.text('Sin conexión'), findsNothing, reason: 'No es la pantalla de error');
+    expect(find.text('Sin conexión a internet'), findsNothing, reason: 'No es la pantalla de error');
   });
 
-  testWidgets('Error del servidor: "No pudimos cargar los embarcaderos" con el mensaje de la API', (
-    tester,
-  ) async {
+  testWidgets('Servidor caído con datos guardados: "El servicio no está disponible…"', (tester) async {
+    await _pump(tester, FakeRepository(staleError: _serverDown));
+    expect(
+      find.text(
+        'El servicio no está disponible en este momento. Estás viendo los datos guardados en tu teléfono.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Zarpe calculado en el teléfono: lo indica', (tester) async {
+    await _pump(tester, FakeRepository()..proximaSalidaLocal = true);
+    expect(find.text('Calculado en tu teléfono, sin conexión'), findsWidgets);
+  });
+
+  testWidgets('Servidor caído sin datos guardados: "El servicio no está disponible"', (tester) async {
     await _pump(tester, FakeRepository(error: _serverDown));
-    expect(find.text('No pudimos cargar los embarcaderos'), findsOneWidget);
+    expect(find.text('El servicio no está disponible'), findsOneWidget);
     expect(find.text(_serverDown.message), findsOneWidget);
     expect(find.text('Reintentar'), findsOneWidget);
+  });
+
+  testWidgets('Otro error de la API: "No pudimos cargar los embarcaderos" con su mensaje', (tester) async {
+    const forbidden = ApiException(
+      kind: ApiErrorKind.client,
+      code: 'NO_PERMITIDO',
+      message: 'No tienes permiso para ver esto.',
+      statusCode: 403,
+    );
+    await _pump(tester, FakeRepository(error: forbidden));
+    expect(find.text('No pudimos cargar los embarcaderos'), findsOneWidget);
+    expect(find.text(forbidden.message), findsOneWidget);
   });
 
   testWidgets('Vacío: "Todavía no hay embarcaderos"', (tester) async {
