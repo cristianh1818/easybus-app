@@ -32,6 +32,7 @@ import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../utils/color_hex.dart';
 import '../utils/time_format.dart';
+import '../widgets/eb_wave_refresh.dart';
 import '../widgets/eb_async_view.dart';
 import '../widgets/eb_avisos_section.dart';
 import '../widgets/eb_favorite_button.dart';
@@ -81,7 +82,9 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final nombre = ref.read(rutaDetalleProvider(widget.rutaId)).value?.data.ruta.nombre;
-      ref.read(historyProvider.notifier).recordRoute(rutaId: widget.rutaId, codigo: widget.codigo, nombre: nombre);
+      ref
+          .read(historyProvider.notifier)
+          .recordRoute(rutaId: widget.rutaId, codigo: widget.codigo, nombre: nombre);
     });
   }
 
@@ -117,8 +120,7 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
         title: EbWrapText('Ruta ${widget.codigo}', maxLines: 1),
         actions: [EbFavoriteButton.route(id: widget.rutaId, label: 'Ruta ${widget.codigo}')],
       ),
-      body: RefreshIndicator(
-        color: EbColors.river,
+      body: EbWaveRefresh(
         onRefresh: _refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

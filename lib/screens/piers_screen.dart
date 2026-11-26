@@ -22,6 +22,7 @@ import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../utils/time_format.dart';
+import '../widgets/eb_wave_refresh.dart';
 import '../widgets/eb_async_view.dart';
 import 'pier_detail_screen.dart';
 import '../widgets/eb_avisos_section.dart';
@@ -50,8 +51,7 @@ class PiersScreen extends ConsumerWidget {
       children: [
         EbScreenHeader(title: style.stopLabelPlural),
         Expanded(
-          child: RefreshIndicator(
-            color: EbColors.river,
+          child: EbWaveRefresh(
             onRefresh: () => refresh(ref, mode),
             child: EbAsyncView<PiersOverview>(
               value: overview,

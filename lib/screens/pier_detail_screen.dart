@@ -22,6 +22,7 @@ import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../utils/time_format.dart';
+import '../widgets/eb_wave_refresh.dart';
 import '../widgets/eb_async_view.dart';
 import '../widgets/eb_avisos_section.dart';
 import '../widgets/eb_favorite_button.dart';
@@ -74,8 +75,7 @@ class PierDetailScreen extends ConsumerWidget {
         title: EbWrapText(style.stopLabel, maxLines: 1),
         actions: [EbFavoriteButton.pier(id: embarcadero.id, label: e.nombre)],
       ),
-      body: RefreshIndicator(
-        color: EbColors.river,
+      body: EbWaveRefresh(
         onRefresh: () => _refresh(ref),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),

@@ -18,6 +18,9 @@ import '../utils/time_format.dart';
 class EbNextDepartureRow extends ConsumerWidget {
   const EbNextDepartureRow({super.key, required this.service, required this.embarcaderoId, this.label});
 
+  /// Desde cuántos minutos antes de zarpar el chip late.
+  static const soonMinutes = 5;
+
   final PierService service;
   final String embarcaderoId;
 
@@ -31,13 +34,13 @@ class EbNextDepartureRow extends ConsumerWidget {
     final value = ref.watch(proximaSalidaProvider(args));
     final now = ref.watch(clockProvider).value ?? ref.watch(nowProvider)();
 
-    final (String detail, Color color, bool strong) = switch (value) {
+    final (String detail, Color color, bool strong, bool soon) = switch (value) {
       AsyncValue(hasValue: true) => _describe(value.requireValue.data, value.requireValue.updatedAt, now, () {
         // La salida ya pasó: se consulta la siguiente (después de este cuadro)
         WidgetsBinding.instance.addPostFrameCallback((_) => ref.invalidate(proximaSalidaProvider(args)));
       }),
-      AsyncValue(hasError: true) => ('No se pudo calcular', EbColors.textMuted, false),
-      _ => ('00:00 · en 00 min', EbColors.textMuted, false),
+      AsyncValue(hasError: true) => ('No se pudo calcular', EbColors.textMuted, false, false),
+      _ => ('00:00 · en 00 min', EbColors.textMuted, false, false),
     };
     final loading = !value.hasValue && !value.hasError;
     // Sin conexión: calculada en el teléfono con los horarios guardados
@@ -76,12 +79,16 @@ class EbNextDepartureRow extends ConsumerWidget {
               enabled: loading,
               child: AnimatedSwitcher(
                 duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : EbDurations.normal,
-                child: Text(
-                  detail,
+                // Faltan 5 min o menos: el chip late suave (sin "reducir movimiento")
+                child: EbSoonPulse(
                   key: ValueKey(detail),
-                  style: text.bodyMedium?.copyWith(
-                    color: color,
-                    fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+                  active: soon,
+                  child: Text(
+                    detail,
+                    style: text.bodyMedium?.copyWith(
+                      color: color,
+                      fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -93,7 +100,7 @@ class EbNextDepartureRow extends ConsumerWidget {
     );
   }
 
-  static (String, Color, bool) _describe(
+  static (String, Color, bool, bool) _describe(
     ProximaSalida p,
     DateTime fetchedAt,
     DateTime now,
@@ -105,24 +112,105 @@ class EbNextDepartureRow extends ConsumerWidget {
         final remaining = (p.minutesRemaining ?? 0) - (elapsed < 0 ? 0 : elapsed);
         if (remaining < 0) {
           onDeparted();
-          return ('Actualizando…', EbColors.textMuted, false);
+          return ('Actualizando…', EbColors.textMuted, false, false);
         }
-        return ('${p.departureTime} · ${formatInMinutes(remaining)}', EbColors.riverInk, true);
+        return (
+          '${p.departureTime} · ${formatInMinutes(remaining)}',
+          EbColors.riverInk,
+          true,
+          remaining <= soonMinutes,
+        );
       case DepartureStatus.noMoreDeparturesToday:
         final next = p.nextDayFirstDeparture;
-        if (next == null) return ('Sin más salidas hoy', EbColors.textMuted, false);
+        if (next == null) return ('Sin más salidas hoy', EbColors.textMuted, false, false);
         final isTomorrow = DateTime.parse(next.date).difference(DateTime.parse(p.localDate)).inDays == 1;
         return (
           'Sin más salidas hoy · ${isTomorrow ? 'mañana' : next.date} ${next.departureTime}',
           EbColors.textMuted,
           false,
+          false,
         );
       case DepartureStatus.suspended:
-        return ('Suspendido', EbColors.alertSuspended, true);
+        return ('Suspendido', EbColors.alertSuspended, true, false);
       case DepartureStatus.outOfService:
-        return ('Fuera de servicio', EbColors.alertSuspended, true);
+        return ('Fuera de servicio', EbColors.alertSuspended, true, false);
       case DepartureStatus.unknown:
-        return (p.message, EbColors.textMuted, false);
+        return (p.message, EbColors.textMuted, false, false);
     }
+  }
+}
+
+/// Chip que late suave (escala 1 → 1,06 y fondo que aparece y se va, 1,6 s por
+/// ciclo, menos de 1 vez por segundo) para avisar que la embarcación sale pronto.
+/// Con "reducir movimiento" el chip queda resaltado y quieto. El texto dice igual
+/// "en X min": la información no depende de la animación.
+class EbSoonPulse extends StatefulWidget {
+  const EbSoonPulse({super.key, required this.active, required this.child});
+
+  final bool active;
+  final Widget child;
+
+  @override
+  State<EbSoonPulse> createState() => _EbSoonPulseState();
+}
+
+class _EbSoonPulseState extends State<EbSoonPulse> with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 800));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(EbSoonPulse old) {
+    super.didUpdateWidget(old);
+    _sync();
+  }
+
+  void _sync() {
+    final animate = widget.active && !MediaQuery.disableAnimationsOf(context);
+    if (animate && !_c.isAnimating) {
+      _c.repeat(reverse: true);
+    } else if (!animate && _c.isAnimating) {
+      _c
+        ..stop()
+        ..value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!widget.active) return widget.child;
+    final still = MediaQuery.disableAnimationsOf(context);
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _c,
+        child: widget.child,
+        builder: (context, child) {
+          final t = still ? 1.0 : Curves.easeInOutSine.transform(_c.value);
+          return Transform.scale(
+            scale: 1 + 0.06 * t,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: EbColors.riverTint.withValues(alpha: 0.5 + 0.5 * t),
+                borderRadius: BorderRadius.circular(EbRadius.pill),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: EbSpacing.s, vertical: 2),
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }

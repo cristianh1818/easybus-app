@@ -25,6 +25,7 @@ import '../services/ubicacion_service.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../utils/color_hex.dart';
+import '../widgets/eb_wave_refresh.dart';
 import '../widgets/eb_bottom_nav.dart';
 import '../widgets/eb_menu_button.dart';
 import '../widgets/eb_next_departure_row.dart';
@@ -411,8 +412,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           top: 0,
           left: 0,
           right: 0,
-          child: RefreshIndicator(
-            color: EbColors.river,
+          child: EbWaveRefresh(
             edgeOffset: media.top,
             semanticsLabel: 'Actualizar el mapa',
             onRefresh: () => refreshAllData(ref, widget.mode),
