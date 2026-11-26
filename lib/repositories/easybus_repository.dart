@@ -121,6 +121,12 @@ class CachedEasybusRepository implements EasybusRepository {
     try {
       fresh = await _api.fetchWithJson(endpoint);
     } on ApiException catch (e) {
+      // 404: se eliminó en el panel (un embarcadero, una ruta). Lo guardado ya no
+      // vale: se borra y la pantalla muestra el error en vez de datos fantasma.
+      if (e.statusCode == 404) {
+        await _cache.remove(endpoint.cacheKey).catchError((Object _) {});
+        rethrow;
+      }
       if (cached == null) rethrow;
       yield Fetched(cached.data, updatedAt: cached.updatedAt, origin: DataOrigin.cache, refreshError: e);
       return;
@@ -128,11 +134,27 @@ class CachedEasybusRepository implements EasybusRepository {
     final now = _now();
     try {
       await _cache.write(endpoint.cacheKey, fresh.$2, now);
+      await _purgeRemoved(endpoint.cacheKey, fresh.$1);
     } on Object catch (e) {
       // Sin espacio, base cerrada…: la app sigue con los datos de la red
       debugPrint('[cache] no se pudo guardar ${endpoint.cacheKey}: $e');
     }
     yield Fetched(fresh.$1, updatedAt: now, origin: DataOrigin.network);
+  }
+
+  /// Con la lista completa recién descargada, borra los detalles guardados de los
+  /// embarcaderos o rutas que ya no están (eliminados en el panel).
+  Future<void> _purgeRemoved(String key, Object? fresh) async {
+    // Solo con las listas completas (sin filtros)
+    if (key == ApiEndpoint.embarcaderos().cacheKey && fresh is List<Embarcadero>) {
+      await _cache.removeByPrefixExcept('embarcadero/', {for (final e in fresh) 'embarcadero/${e.id}'});
+    } else if (key == ApiEndpoint.rutas().cacheKey && fresh is List<Ruta>) {
+      final ids = {for (final r in fresh) r.id};
+      await _cache.removeByPrefixExcept('ruta/', {for (final id in ids) 'ruta/$id'});
+      await _cache.removeWhereKey(
+        (key) => key.startsWith('horarios/') && !ids.contains(key.split('/')[1]),
+      );
+    }
   }
 
   @override

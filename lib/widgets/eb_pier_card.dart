@@ -10,10 +10,6 @@ import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import 'eb_wrap_text.dart';
 
-/// Etiqueta Hero del ícono del embarcadero: la comparten la tarjeta y el encabezado
-/// del detalle (pier_detail_screen.dart).
-String pierHeroTag(String id) => 'pier-icon-$id';
-
 class EbPierCard extends StatelessWidget {
   const EbPierCard({
     super.key,
@@ -81,14 +77,10 @@ class EbPierCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ExcludeSemantics(
-                    child: Hero(
-                      // Viaja al encabezado del detalle (pier_detail_screen.dart)
-                      tag: pierHeroTag(e.id),
-                      child: CircleAvatar(
-                        radius: 22,
-                        backgroundColor: mode.tint,
-                        child: Icon(mode.icon, color: mode.color),
-                      ),
+                    child: CircleAvatar(
+                      radius: 22,
+                      backgroundColor: mode.tint,
+                      child: Icon(mode.icon, color: mode.color),
                     ),
                   ),
                   const SizedBox(width: EbSpacing.m),

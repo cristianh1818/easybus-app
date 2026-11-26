@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 
-import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
 import '../widgets/eb_screen_header.dart';
 import '../widgets/eb_wrap_text.dart';
@@ -17,7 +16,9 @@ class AccountScreen extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return ListView(
-      padding: context.ebScrollPadding(horizontal: 0, top: 0, bottom: EbSpacing.l),
+      // Sin el alto de la barra de estado arriba: lo suma el encabezado (si lo sumara
+      // también la lista, el título quedaría más abajo que el ☰)
+      padding: EdgeInsets.only(bottom: EbSpacing.l + MediaQuery.paddingOf(context).bottom),
       children: [
         // Cabecera curva de todo el ancho: ☰ y título en una fila, avatar centrado
         ClipPath(
@@ -29,8 +30,6 @@ class AccountScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // La lista tiene padding propio, así que el encabezado sigue
-                  // recibiendo el alto de la barra de estado y se coloca debajo
                   const EbScreenHeader(title: 'Cuenta'),
                   const SizedBox(height: EbSpacing.m),
                   const Center(

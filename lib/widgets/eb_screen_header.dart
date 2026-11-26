@@ -1,5 +1,6 @@
-// Encabezado de las pestañas: botón ☰ y título en la misma fila, sin superponerse.
-// El título nunca parte una palabra (EbWrapText) y queda centrado con el botón.
+// Encabezado de las pestañas: deja libre el lugar del botón ☰ (que pone HomeShell,
+// uno solo para las tres pestañas, siempre en la misma posición) y muestra el título
+// a su lado, centrado con él. El título nunca parte una palabra (EbWrapText).
 
 import 'package:flutter/material.dart';
 
@@ -20,8 +21,8 @@ class EbScreenHeader extends StatelessWidget {
       padding: EdgeInsets.only(top: top),
       child: Row(
         children: [
-          // El padding superior ya se aplicó: el botón no debe sumarlo otra vez
-          MediaQuery.removePadding(context: context, removeTop: true, child: const EbMenuButton()),
+          // Lugar del ☰ (HomeShell lo dibuja encima, a esta misma altura)
+          const SizedBox.square(dimension: EbMenuButton.size),
           const SizedBox(width: EbSpacing.m),
           Expanded(
             child: Padding(

@@ -3,14 +3,18 @@
 // una lista no pierde su posición ni se vuelve a descargar.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../models/transport_mode.dart';
+import '../providers/clock_provider.dart';
+import '../providers/refresh.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../widgets/eb_animated_logo.dart';
 import '../widgets/eb_bottom_nav.dart';
+import '../widgets/eb_menu_button.dart';
 import '../widgets/eb_side_menu.dart';
 import 'account_screen.dart';
 import 'help_screen.dart';
@@ -20,7 +24,7 @@ import 'settings_screen.dart';
 
 enum HomeTab { piers, map, account }
 
-class HomeShell extends StatefulWidget {
+class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key, this.initialTab = HomeTab.map, this.mode = TransportMode.fluvial});
 
   /// El mockup abre en el mapa.
@@ -32,11 +36,37 @@ class HomeShell extends StatefulWidget {
       'en Montería.';
 
   @override
-  State<HomeShell> createState() => _HomeShellState();
+  ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends ConsumerState<HomeShell> {
   late int _index = widget.initialTab.index;
+
+  // Al volver desde segundo plano, si pasaron más de 2 min, se actualiza todo
+  // (los zarpes y avisos pudieron cambiar mientras tanto).
+  late final AppLifecycleListener _lifecycle;
+  DateTime? _hiddenAt;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(
+      onHide: () => _hiddenAt = ref.read(nowProvider)(),
+      onShow: () {
+        final hiddenAt = _hiddenAt;
+        _hiddenAt = null;
+        if (shouldRefreshOnResume(hiddenAt, ref.read(nowProvider)())) {
+          refreshAllData(ref, widget.mode);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   void _select(int i) => setState(() => _index = i);
 
@@ -112,16 +142,25 @@ class _HomeShellState extends State<HomeShell> {
       // Las listas suman ese alto con ebScrollPadding (MediaQuery ya lo incluye).
       extendBody: true,
       drawer: Builder(builder: (context) => EbSideMenu(entries: _menuEntries(context))),
-      body: IndexedStack(
-        index: _index,
+      body: Stack(
         children: [
-          for (final (i, tab) in [
-            PiersScreen(mode: widget.mode),
-            MapScreen(mode: widget.mode, onOpenPiers: () => _select(HomeTab.piers.index)),
-            const AccountScreen(),
-          ].indexed)
-            // Las animaciones de las pestañas ocultas (pulso, flujo de la ruta) se pausan
-            TickerMode(enabled: i == _index, child: tab),
+          Positioned.fill(
+            child: IndexedStack(
+              index: _index,
+              children: [
+                for (final (i, tab) in [
+                  PiersScreen(mode: widget.mode),
+                  MapScreen(mode: widget.mode, onOpenPiers: () => _select(HomeTab.piers.index)),
+                  const AccountScreen(),
+                ].indexed)
+                  // Las animaciones de las pestañas ocultas (pulso, flujo de la ruta) se pausan
+                  TickerMode(enabled: i == _index, child: tab),
+              ],
+            ),
+          ),
+          // Un solo ☰ para las tres pestañas: siempre en la misma posición (arriba a la
+          // izquierda, debajo de la barra de estado). Cada pestaña le deja su espacio.
+          const Positioned(top: 0, left: 0, child: EbMenuButton()),
         ],
       ),
       bottomNavigationBar: EbBottomNav(items: _navItems, currentIndex: _index, onTap: _select),

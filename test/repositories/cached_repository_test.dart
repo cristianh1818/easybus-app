@@ -154,6 +154,19 @@ void main() {
     expect(rows.where((r) => r.key.startsWith('avisos')), isEmpty);
   });
 
+  test('Un embarcadero eliminado en el panel desaparece de la caché al actualizar', () async {
+    const viejo = 'embarcadero/id-eliminado';
+    await cache.write(viejo, {'id': 'id-eliminado'}, now);
+    await repo.watchEmbarcaderos().toList();
+    expect(await cache.read(viejo), isNull, reason: 'Ya no está en la lista nueva');
+
+    // Su detalle guardado responde 404: se borra y no se muestra como "sin conexión"
+    await cache.write(viejo, {'id': 'id-eliminado'}, now);
+    adapter.notFound = true;
+    await expectLater(repo.watchEmbarcadero('id-eliminado').drain<void>(), throwsA(isA<ApiException>()));
+    expect(await cache.read(viejo), isNull);
+  });
+
   test('Borrar la caché', () async {
     await repo.watchEmbarcaderos().toList();
     await cache.clear();

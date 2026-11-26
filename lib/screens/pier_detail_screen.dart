@@ -5,13 +5,11 @@
 // Mientras carga, muestra de inmediato lo que ya se conoce de la lista (nombre,
 // referencia) y un skeleton solo para lo que falta.
 
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../config/app_config.dart';
 import '../domain/siguientes_pasos.dart';
 import '../models/embarcadero.dart';
 import '../models/enums.dart';
@@ -26,7 +24,7 @@ import '../utils/time_format.dart';
 import '../widgets/eb_async_view.dart';
 import '../widgets/eb_avisos_section.dart';
 import '../widgets/eb_next_departure_row.dart';
-import '../widgets/eb_pier_card.dart' show pierHeroTag;
+import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_wrap_text.dart';
 
 class PierDetailScreen extends ConsumerWidget {
@@ -134,7 +132,6 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e = embarcadero;
-    final style = e.mode.style;
     final text = Theme.of(context).textTheme;
 
     final tags = <String>[
@@ -142,46 +139,15 @@ class _Header extends StatelessWidget {
       if (e.margen != null) e.margen == Margen.izquierda ? 'Margen izquierda' : 'Margen derecha',
       if (!e.esOficial) 'Dato de ejemplo',
     ];
-    final fotoUrl = AppConfig.mediaUrl(e.fotoUrl);
-
-    // Marcador de posición: sin foto, mientras carga o si no se pudo cargar
-    Widget marcador({bool hero = false}) {
-      final icono = CircleAvatar(
-        radius: 36,
-        backgroundColor: EbColors.white,
-        child: Icon(style.icon, size: 40, color: style.color, semanticLabel: style.stopLabel),
-      );
-      return ColoredBox(
-        color: style.tint,
-        child: Center(child: hero ? Hero(tag: pierHeroTag(e.id), child: icono) : icono),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(EbRadius.card),
-          child: AspectRatio(
-            aspectRatio: 16 / 7,
-            child: fotoUrl == null
-                ? marcador(hero: true)
-                : Semantics(
-                    image: true,
-                    label: 'Foto del ${e.nombre}',
-                    child: CachedNetworkImage(
-                      imageUrl: fotoUrl,
-                      fit: BoxFit.cover,
-                      // Reduce la memoria: no decodifica a más resolución que la pantalla
-                      memCacheWidth: (MediaQuery.sizeOf(context).width *
-                              MediaQuery.devicePixelRatioOf(context))
-                          .round(),
-                      fadeInDuration: const Duration(milliseconds: 200),
-                      placeholder: (_, _) => marcador(),
-                      errorWidget: (_, _, _) => marcador(),
-                    ),
-                  ),
-          ),
+        // Más grande que la portada de la hoja del mapa; viaja con Hero desde ahí y
+        // al tocarla se abre en pantalla completa con zoom
+        EbPierPhoto(
+          embarcadero: e,
+          aspectRatio: 4 / 3,
+          onTap: () => openPierPhotoViewer(context, e),
         ),
         const SizedBox(height: EbSpacing.m),
         Semantics(header: true, child: EbWrapText(e.nombre, style: text.headlineSmall)),

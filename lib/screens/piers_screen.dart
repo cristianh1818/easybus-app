@@ -17,6 +17,7 @@ import '../providers/data_providers.dart';
 import '../providers/errors.dart';
 import '../services/api_exception.dart';
 import '../providers/piers_providers.dart';
+import '../providers/refresh.dart';
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
@@ -37,19 +38,7 @@ class PiersScreen extends ConsumerWidget {
   final TransportMode mode;
 
   /// Vuelve a pedir todo (deslizar para actualizar y "Reintentar").
-  static Future<void> refresh(WidgetRef ref, TransportMode mode) async {
-    ref
-      ..invalidate(embarcaderosProvider)
-      ..invalidate(rutasProvider)
-      ..invalidate(rutaDetalleProvider)
-      ..invalidate(avisosProvider)
-      ..invalidate(proximaSalidaProvider);
-    try {
-      await ref.read(piersOverviewProvider(mode).future);
-    } on Object {
-      // El error se muestra en la pantalla
-    }
-  }
+  static Future<void> refresh(WidgetRef ref, TransportMode mode) => refreshAllData(ref, mode);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

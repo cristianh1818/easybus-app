@@ -17,12 +17,14 @@ import '../models/enums.dart';
 import '../models/transport_mode.dart';
 import '../providers/map_providers.dart';
 import '../providers/piers_providers.dart';
+import '../providers/refresh.dart';
 import '../services/ubicacion_service.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../widgets/eb_bottom_nav.dart';
 import '../widgets/eb_menu_button.dart';
 import '../widgets/eb_next_departure_row.dart';
+import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_search_pill.dart';
 import '../widgets/map/eb_river_map.dart';
 import 'pier_detail_screen.dart';
@@ -154,22 +156,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Future<void> _openPier(PierListItem item) async {
-    final sheetHeight = MediaQuery.sizeOf(context).height * 0.42;
+    final screenHeight = MediaQuery.sizeOf(context).height;
+    // Con la portada la hoja ocupa algo más de la mitad
+    final sheetHeight = screenHeight * 0.55;
     setState(() => _pierId = item.embarcadero.id);
     _map.focus(item.embarcadero.ubicacion, bottomInset: sheetHeight);
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
       showDragHandle: true,
+      // Se ajusta al contenido (hasta el 85 % de la pantalla, luego se desplaza)
+      isScrollControlled: true,
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
       backgroundColor: EbColors.white,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(EbRadius.sheet))),
       builder: (sheetContext) => _PierSheet(
         item: item,
-        onOpenDetail: () {
-          Navigator.of(sheetContext).pop();
-          Navigator.of(context)
-              .push(MaterialPageRoute<void>(builder: (_) => PierDetailScreen(embarcadero: item.embarcadero)));
-        },
+        // Se abre encima de la hoja (sin cerrarla): la foto viaja con Hero y al
+        // volver el pasajero sigue en la hoja
+        onOpenDetail: () => Navigator.of(sheetContext)
+            .push(MaterialPageRoute<void>(builder: (_) => PierDetailScreen(embarcadero: item.embarcadero))),
       ),
     );
     if (mounted) setState(() => _pierId = null);
@@ -237,21 +243,39 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             },
           ),
         ),
-        const Positioned(top: 0, left: 0, child: EbMenuButton()),
+        // El ☰ lo pone HomeShell (el mismo en las tres pestañas)
+        // Franja superior (chips de rutas): deslizar hacia abajo aquí actualiza los
+        // datos. El resto del mapa sigue moviéndose con el dedo.
         Positioned(
-          top: media.top + EbSpacing.s,
-          left: EbMenuButton.size + EbSpacing.s,
+          top: 0,
+          left: 0,
           right: 0,
-          child: _TopControls(
-            routes: routes,
-            selected: selectedRoute,
-            sentido: selectedDir?.sentido,
-            colorOf: _routeColor,
-            onRoute: _selectRoute,
-            onSentido: _selectSentido,
-            loading: data.isLoading && value == null,
-            error: data.hasError && value == null,
-            onRetry: () => ref.invalidate(mapDataProvider(widget.mode)),
+          child: RefreshIndicator(
+            color: EbColors.river,
+            edgeOffset: media.top,
+            semanticsLabel: 'Actualizar el mapa',
+            onRefresh: () => refreshAllData(ref, widget.mode),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: media.top + EbSpacing.s,
+                  left: EbMenuButton.size + EbSpacing.s,
+                  bottom: EbSpacing.s,
+                ),
+                child: _TopControls(
+                  routes: routes,
+                  selected: selectedRoute,
+                  sentido: selectedDir?.sentido,
+                  colorOf: _routeColor,
+                  onRoute: _selectRoute,
+                  onSentido: _selectSentido,
+                  loading: data.isLoading && value == null,
+                  error: data.hasError && value == null,
+                  onRetry: () => refreshAllData(ref, widget.mode),
+                ),
+              ),
+            ),
           ),
         ),
         if (nearest.isNotEmpty)
@@ -685,12 +709,18 @@ class _PierSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = item.embarcadero;
     final text = Theme.of(context).textTheme;
+    // La hoja llega hasta el borde inferior: se suma la barra de navegación del
+    // sistema (3 botones o gestos) para que "Ver detalle" no quede debajo
+    final systemBottom = MediaQuery.paddingOf(context).bottom;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(EbSpacing.l, 0, EbSpacing.l, EbSpacing.l),
+      padding: EdgeInsets.fromLTRB(EbSpacing.l, 0, EbSpacing.l, EbSpacing.l + systemBottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Portada (o el fondo con el ícono, del mismo tamaño)
+          EbPierPhoto(embarcadero: e, aspectRatio: 2 / 1),
+          const SizedBox(height: EbSpacing.m),
           Text(e.nombre, style: text.titleLarge),
           if (e.referencia != null) ...[
             const SizedBox(height: EbSpacing.xs),

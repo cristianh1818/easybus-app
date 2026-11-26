@@ -47,6 +47,20 @@ class ResponseCache {
 
   Future<void> remove(String key) => (_db.delete(_db.cacheEntries)..where((t) => t.key.equals(key))).go();
 
+  /// Borra las claves que empiezan por [prefix] salvo las de [keep].
+  Future<void> removeByPrefixExcept(String prefix, Set<String> keep) =>
+      removeWhereKey((key) => key.startsWith(prefix) && !keep.contains(key));
+
+  /// Borra las filas cuya clave cumple [test].
+  Future<void> removeWhereKey(bool Function(String key) test) async {
+    final keys = await (_db.selectOnly(_db.cacheEntries)..addColumns([_db.cacheEntries.key]))
+        .map((row) => row.read(_db.cacheEntries.key)!)
+        .get();
+    final remove = keys.where(test).toList();
+    if (remove.isEmpty) return;
+    await (_db.delete(_db.cacheEntries)..where((t) => t.key.isIn(remove))).go();
+  }
+
   /// Borra todo lo guardado.
   Future<void> clear() => _db.delete(_db.cacheEntries).go();
 }
