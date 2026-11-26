@@ -18,6 +18,8 @@
 | `dbb8bda` | Próxima salida sin conexión y mensajes de error; detalle del embarcadero; arreglo de conexiones inactivas y reintento de GET |
 | `e0c4fe6` | Mapa del río (parte 1): embarcaderos, chips de rutas, sentido y hoja del embarcadero |
 | `846234d` | Foto del embarcadero en el detalle, con caché (`cached_network_image`) |
+| `0be8b6f` | PROGRESO.md con los datos nuevos de BS-1 |
+| `2e61e0a` | Mapa del río (parte 2): mi ubicación y los 3 embarcaderos más cercanos (calculado en el teléfono) |
 
 ## Backend (`easybus-backend`)
 
@@ -28,6 +30,7 @@
 | `437e836` | Panel: editor de trazado (arrastrar, curvas, borrar, deshacer, copiar el otro sentido, km) |
 | `ca6e01e` | Fotos de embarcaderos: subida desde el panel, WEBP sin EXIF, en `/uploads` |
 | `0b60a47` | Seed con los datos nuevos: BS-1 "Businú", 11 embarcaderos, 4 embarcaciones (sin BS-2) |
+| `9905a07` | Tiempos estimados a 20 km/h + 1 min por parada; 5 embarcaciones en el seed |
 
 ## Decisiones
 
@@ -42,46 +45,48 @@
 
 - Una sola ruta: BS-1 "Businú", Embarcadero Sierra Chiquita (sur) ↔ Embarcadero Boca
   de la Ceiba (norte), 11 embarcaderos, trazado de 16,97 km (la vuelta es la ida al
-  revés). 4 embarcaciones (BN-01 a BN-04). Salidas cada 30 min: lunes a viernes
+  revés). 5 embarcaciones (BN-01 a BN-05). Salidas cada 30 min: lunes a viernes
   05:30–22:00; sábados, domingos y festivos 05:30–19:00. BS-2 se eliminó.
 - `npm run seed:reset` ya carga estos mismos datos (sin las fotos, que no están en Git).
 
-### Tabla de minutos de BS-1 (verificada el 2026-11-26, solo lectura)
+### Tiempos de BS-1: ESTIMACIÓN pendiente de medir en un viaje real
 
-Los 11 embarcaderos están sobre el trazado (0 m) y la regla A (solo trazado) coincide
-con la regla B (el mayor entre trazado y línea recta) en todos. Con 10 min/km:
+Regla desde el 2026-11-26: **20 km/h por el trazado + 1 minuto por cada parada
+intermedia** (antes 10 min/km). En una parada intermedia el tiempo es la hora en que la
+embarcación sale de ahí; en el destino, la de llegada. Los 11 embarcaderos están sobre
+el trazado (0 m) y las reglas A y B coinciden (verificado solo lectura).
 
 | # | Embarcadero | km desde Sierra Chiquita | Ida (min) | Vuelta (min) |
 |---|---|---|---|---|
-| 1 | Sierra Chiquita | 0,00 | 0 | 170 |
-| 2 | Batallón | 3,00 | 30 | 140 |
-| 3 | Sur | 4,31 | 43 | 127 |
-| 4 | Puente Metálico | 5,45 | 54 | 115 |
-| 5 | Avenida primera | 6,31 | 63 | 107 |
-| 6 | María Varilla | 7,19 | 72 | 98 |
-| 7 | Sucre | 8,32 | 83 | 86 |
-| 8 | Ronda Norte | 10,06 | 101 | 69 |
-| 9 | Club campestre | 11,28 | 113 | 57 |
-| 10 | Universidad de Córdoba | 12,71 | 127 | 43 |
-| 11 | Boca de la Ceiba | 16,97 | 170 | 0 |
+| 1 | Sierra Chiquita | 0,00 | 0 | 60 |
+| 2 | Batallón | 3,00 | 10 | 51 |
+| 3 | Sur | 4,31 | 15 | 46 |
+| 4 | Puente Metálico | 5,45 | 19 | 42 |
+| 5 | Avenida primera | 6,31 | 23 | 38 |
+| 6 | María Varilla | 7,19 | 27 | 34 |
+| 7 | Sucre | 8,32 | 31 | 30 |
+| 8 | Ronda Norte | 10,06 | 37 | 24 |
+| 9 | Club campestre | 11,28 | 42 | 19 |
+| 10 | Universidad de Córdoba | 12,71 | 47 | 14 |
+| 11 | Boca de la Ceiba | 16,97 | 60 | 0 |
 
-Son coherentes con la distancia, pero 10 min/km (6 km/h) es lento para una lancha: un
-viaje dura 170 min y, con salidas cada 30 min en ambos extremos, harían falta unas 12
-embarcaciones (hay 4). Propuesta pendiente de decidir: 20 km/h + 1 min por parada
-(unos 60 min por sentido).
+Flota: ida + vuelta + unos 10 min de espera ≈ 130 min; con una salida cada 30 min
+desde cada extremo hacen falta 5 embarcaciones (antes, con 170 min por viaje, unas 12).
+Cuando se mida un viaje real, escribir esos minutos en el panel (quedan como "real" y los
+estimados siguientes parten de ellos) o ajustar `VELOCIDAD_KMH` / `MINUTOS_POR_PARADA`
+en `src/rutas/tiempos-estimados.ts`.
 
 ## Pendientes
 
 ### Backend / datos (desde el panel, para que quede en la auditoría)
-- Decidir la velocidad de BS-1 (hoy 10 min/km) o escribir los minutos reales de un
-  viaje medido en el panel (quedan como "real" y los estimados siguientes parten de ahí).
+- Medir un viaje real de BS-1 y registrar esos minutos en el panel (los de hoy son una
+  estimación a 20 km/h + 1 min por parada).
 - Mayúsculas en el panel: destinos "Embarcadero Boca de la ceiba" y "Embarcadero Sierra
   chiquita" (los nombres de los embarcaderos sí van con mayúscula).
 - Cargar los festivos de 2027: `GET /festivos?anio=2027` está vacío. Sin ellos, desde el
   1 de enero el backend y la app aplicarán horario laboral en los festivos.
 
 ### App
-- Mapa del río, parte 2: mi ubicación y embarcaderos más cercanos (en curso).
 - Detalle de la ruta con la línea del río (pantalla insignia).
 - Búsqueda de origen y destino (píldora "¿A dónde quieres ir hoy?"; hoy lleva a
   Embarcaderos).
