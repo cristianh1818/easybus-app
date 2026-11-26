@@ -115,9 +115,13 @@ class _HomeShellState extends State<HomeShell> {
       body: IndexedStack(
         index: _index,
         children: [
-          PiersScreen(mode: widget.mode),
-          MapScreen(mode: widget.mode, onOpenPiers: () => _select(HomeTab.piers.index)),
-          const AccountScreen(),
+          for (final (i, tab) in [
+            PiersScreen(mode: widget.mode),
+            MapScreen(mode: widget.mode, onOpenPiers: () => _select(HomeTab.piers.index)),
+            const AccountScreen(),
+          ].indexed)
+            // Las animaciones de las pestañas ocultas (pulso, flujo de la ruta) se pausan
+            TickerMode(enabled: i == _index, child: tab),
         ],
       ),
       bottomNavigationBar: EbBottomNav(items: _navItems, currentIndex: _index, onTap: _select),
