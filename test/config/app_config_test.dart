@@ -18,6 +18,14 @@ void main() {
     expect(() => parse(''), throwsStateError);
   });
 
+  test('mediaUrl une /uploads al servidor de la API y deja las URL externas', () {
+    const base = 'https://api.easybus.co/api/v1';
+    expect(AppConfig.mediaUrl('/uploads/a.webp', base: base), 'https://api.easybus.co/uploads/a.webp');
+    expect(AppConfig.mediaUrl('https://x.co/f.jpg', base: base), 'https://x.co/f.jpg');
+    expect(AppConfig.mediaUrl(null, base: base), isNull);
+    expect(AppConfig.mediaUrl('foto.jpg', base: base), isNull);
+  });
+
   test('En release exige HTTPS', () {
     expect(() => parse('http://api.easybus.co/api/v1', release: true), throwsStateError);
     expect(parse('https://api.easybus.co/api/v1', release: true), 'https://api.easybus.co/api/v1');

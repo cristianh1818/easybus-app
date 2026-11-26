@@ -5,11 +5,13 @@
 // Mientras carga, muestra de inmediato lo que ya se conoce de la lista (nombre,
 // referencia) y un skeleton solo para lo que falta.
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../config/app_config.dart';
 import '../domain/siguientes_pasos.dart';
 import '../models/embarcadero.dart';
 import '../models/enums.dart';
@@ -140,6 +142,20 @@ class _Header extends StatelessWidget {
       if (e.margen != null) e.margen == Margen.izquierda ? 'Margen izquierda' : 'Margen derecha',
       if (!e.esOficial) 'Dato de ejemplo',
     ];
+    final fotoUrl = AppConfig.mediaUrl(e.fotoUrl);
+
+    // Marcador de posición: sin foto, mientras carga o si no se pudo cargar
+    Widget marcador({bool hero = false}) {
+      final icono = CircleAvatar(
+        radius: 36,
+        backgroundColor: EbColors.white,
+        child: Icon(style.icon, size: 40, color: style.color, semanticLabel: style.stopLabel),
+      );
+      return ColoredBox(
+        color: style.tint,
+        child: Center(child: hero ? Hero(tag: pierHeroTag(e.id), child: icono) : icono),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -148,32 +164,21 @@ class _Header extends StatelessWidget {
           borderRadius: BorderRadius.circular(EbRadius.card),
           child: AspectRatio(
             aspectRatio: 16 / 7,
-            child: e.fotoUrl == null
-                ? ColoredBox(
-                    color: style.tint,
-                    child: Center(
-                      child: Hero(
-                        tag: pierHeroTag(e.id),
-                        child: CircleAvatar(
-                          radius: 36,
-                          backgroundColor: EbColors.white,
-                          child: Icon(
-                            style.icon,
-                            size: 40,
-                            color: style.color,
-                            semanticLabel: style.stopLabel,
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                : Image.network(
-                    e.fotoUrl!,
-                    fit: BoxFit.cover,
-                    semanticLabel: 'Foto del ${e.nombre}',
-                    errorBuilder: (_, _, _) => ColoredBox(
-                      color: style.tint,
-                      child: Icon(style.icon, size: 40, color: style.color),
+            child: fotoUrl == null
+                ? marcador(hero: true)
+                : Semantics(
+                    image: true,
+                    label: 'Foto del ${e.nombre}',
+                    child: CachedNetworkImage(
+                      imageUrl: fotoUrl,
+                      fit: BoxFit.cover,
+                      // Reduce la memoria: no decodifica a más resolución que la pantalla
+                      memCacheWidth: (MediaQuery.sizeOf(context).width *
+                              MediaQuery.devicePixelRatioOf(context))
+                          .round(),
+                      fadeInDuration: const Duration(milliseconds: 200),
+                      placeholder: (_, _) => marcador(),
+                      errorWidget: (_, _, _) => marcador(),
                     ),
                   ),
           ),

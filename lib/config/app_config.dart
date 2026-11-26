@@ -20,6 +20,20 @@ abstract final class AppConfig {
   /// URL base de la API, sin "/" final (las rutas se piden como "/rutas").
   static final String apiBaseUrl = parseApiBaseUrl(_rawApiBaseUrl, release: kReleaseMode);
 
+  /// URL completa de un archivo servido por la API, como la foto de un embarcadero.
+  /// La API guarda las fotos subidas como ruta relativa ("/uploads/x.webp"), que se
+  /// une al servidor de [apiBaseUrl]; una URL externa (https://…) se usa tal cual.
+  /// Devuelve null si no hay foto o el valor no es usable.
+  static String? mediaUrl(String? ruta, {String? base}) {
+    final valor = ruta?.trim() ?? '';
+    if (valor.isEmpty) return null;
+    if (valor.startsWith('/')) {
+      return Uri.parse(base ?? apiBaseUrl).resolve(valor).toString();
+    }
+    final uri = Uri.tryParse(valor);
+    return uri != null && {'http', 'https'}.contains(uri.scheme) && uri.host.isNotEmpty ? valor : null;
+  }
+
   /// Valida y normaliza la URL base. En release solo se acepta HTTPS.
   @visibleForTesting
   static String parseApiBaseUrl(String raw, {required bool release}) {
