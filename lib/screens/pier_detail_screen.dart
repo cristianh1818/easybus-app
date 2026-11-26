@@ -26,6 +26,7 @@ import '../widgets/eb_avisos_section.dart';
 import '../widgets/eb_next_departure_row.dart';
 import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_wrap_text.dart';
+import 'route_detail_screen.dart';
 
 class PierDetailScreen extends ConsumerWidget {
   const PierDetailScreen({super.key, required this.embarcadero, this.openUrl = _openExternal});
@@ -144,11 +145,7 @@ class _Header extends StatelessWidget {
       children: [
         // Más grande que la portada de la hoja del mapa; viaja con Hero desde ahí y
         // al tocarla se abre en pantalla completa con zoom
-        EbPierPhoto(
-          embarcadero: e,
-          aspectRatio: 4 / 3,
-          onTap: () => openPierPhotoViewer(context, e),
-        ),
+        EbPierPhoto(embarcadero: e, aspectRatio: 4 / 3, onTap: () => openPierPhotoViewer(context, e)),
         const SizedBox(height: EbSpacing.m),
         Semantics(header: true, child: EbWrapText(e.nombre, style: text.headlineSmall)),
         if (e.referencia != null) ...[
@@ -250,6 +247,25 @@ class _Routes extends ConsumerWidget {
                     ),
                     _NextPasses(rutaId: r.ruta.id, sentido: r.sentido, embarcaderoId: e.id),
                   ],
+                  const SizedBox(height: EbSpacing.xs),
+                  // Detalle de la ruta con este embarcadero resaltado
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => RouteDetailScreen(
+                            rutaId: r.ruta.id,
+                            codigo: r.ruta.codigo,
+                            initialSentido: r.sentido,
+                            highlightEmbarcaderoId: e.id,
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.timeline_rounded),
+                      label: const Text('Ver recorrido y horarios'),
+                    ),
+                  ),
                 ],
               ),
             ),

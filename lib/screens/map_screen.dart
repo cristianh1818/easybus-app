@@ -21,6 +21,7 @@ import '../providers/refresh.dart';
 import '../services/ubicacion_service.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
+import '../utils/color_hex.dart';
 import '../widgets/eb_bottom_nav.dart';
 import '../widgets/eb_menu_button.dart';
 import '../widgets/eb_next_departure_row.dart';
@@ -28,6 +29,7 @@ import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_search_pill.dart';
 import '../widgets/map/eb_river_map.dart';
 import 'pier_detail_screen.dart';
+import 'route_detail_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
   const MapScreen({super.key, required this.mode, required this.onOpenPiers});
@@ -90,10 +92,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         });
         final nearest = _nearest(items);
         final padding = _overlayPadding(context);
-        _map.fit(
-          [result.punto, if (nearest.isNotEmpty) nearest.first.item.embarcadero.ubicacion],
-          padding: padding.copyWith(bottom: padding.bottom + _nearestCardSpace),
-        );
+        _map.fit([
+          result.punto,
+          if (nearest.isNotEmpty) nearest.first.item.embarcadero.ubicacion,
+        ], padding: padding.copyWith(bottom: padding.bottom + _nearestCardSpace));
       case UbicacionApagada():
         _snack(
           messenger,
@@ -107,7 +109,10 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           action: SnackBarAction(label: 'Ajustes', onPressed: service.abrirAjustesDeLaApp),
         );
       case UbicacionSinPermiso():
-        _snack(messenger, 'Sin el permiso no podemos mostrar los cercanos. El resto del mapa funciona igual.');
+        _snack(
+          messenger,
+          'Sin el permiso no podemos mostrar los cercanos. El resto del mapa funciona igual.',
+        );
       case UbicacionNoDisponible():
         _snack(
           messenger,
@@ -169,7 +174,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       isScrollControlled: true,
       constraints: BoxConstraints(maxHeight: screenHeight * 0.85),
       backgroundColor: EbColors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(EbRadius.sheet))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(EbRadius.sheet)),
+      ),
       builder: (sheetContext) => _PierSheet(
         item: item,
         // Se abre encima de la hoja (sin cerrarla): la foto viaja con Hero y al
@@ -206,7 +213,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           child: EbRiverMap(
             controller: _map,
             fitPadding: _overlayPadding(context),
-            attributionPadding: EdgeInsets.only(bottom: bottom + _pillSpace - EbBottomNav.bubbleOverflow + EbSpacing.s),
+            attributionPadding: EdgeInsets.only(
+              bottom: bottom + _pillSpace - EbBottomNav.bubbleOverflow + EbSpacing.s,
+            ),
             markers: [
               for (final i in items)
                 EbMapMarker(
@@ -270,6 +279,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   colorOf: _routeColor,
                   onRoute: _selectRoute,
                   onSentido: _selectSentido,
+                  onOpenRoute: (r, s) => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RouteDetailScreen(rutaId: r.id, codigo: r.codigo, initialSentido: s),
+                    ),
+                  ),
                   loading: data.isLoading && value == null,
                   error: data.hasError && value == null,
                   onRetry: () => refreshAllData(ref, widget.mode),
@@ -309,16 +323,7 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     );
   }
 
-  Color _routeColor(MapRoute r) => _parseHex(r.colorHex) ?? widget.mode.style.color;
-}
-
-/// "#1E88E5" → Color. null si falta o no es válido.
-Color? _parseHex(String? hex) {
-  if (hex == null) return null;
-  final h = hex.replaceFirst('#', '');
-  if (h.length != 6) return null;
-  final v = int.tryParse(h, radix: 16);
-  return v == null ? null : Color(0xFF000000 | v);
+  Color _routeColor(MapRoute r) => parseHexColor(r.colorHex) ?? widget.mode.style.color;
 }
 
 /// Chips de las rutas y, con una ruta elegida, el selector de sentido.
@@ -330,6 +335,7 @@ class _TopControls extends StatelessWidget {
     required this.colorOf,
     required this.onRoute,
     required this.onSentido,
+    required this.onOpenRoute,
     required this.loading,
     required this.error,
     required this.onRetry,
@@ -341,6 +347,7 @@ class _TopControls extends StatelessWidget {
   final Color Function(MapRoute) colorOf;
   final ValueChanged<MapRoute> onRoute;
   final void Function(MapRoute, Sentido) onSentido;
+  final void Function(MapRoute, Sentido) onOpenRoute;
   final bool loading;
   final bool error;
   final VoidCallback onRetry;
@@ -386,7 +393,7 @@ class _TopControls extends StatelessWidget {
             ],
           ),
         ),
-        if (sel != null && sel.directions.length > 1) ...[
+        if (sel != null) ...[
           const SizedBox(height: EbSpacing.s),
           Padding(
             padding: const EdgeInsets.only(right: EbSpacing.m),
@@ -395,13 +402,21 @@ class _TopControls extends StatelessWidget {
               child: Wrap(
                 spacing: EbSpacing.xs,
                 runSpacing: EbSpacing.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  for (final d in sel.directions)
-                    _SentidoOption(
-                      label: 'Hacia ${d.destino}',
-                      selected: d.sentido == sentido,
-                      onTap: () => onSentido(sel, d.sentido),
-                    ),
+                  if (sel.directions.length > 1)
+                    for (final d in sel.directions)
+                      _SentidoOption(
+                        label: 'Hacia ${d.destino}',
+                        selected: d.sentido == sentido,
+                        onTap: () => onSentido(sel, d.sentido),
+                      ),
+                  // Detalle de la ruta: recorrido, horas de paso y horarios
+                  TextButton.icon(
+                    onPressed: () => onOpenRoute(sel, sentido ?? sel.directions.first.sentido),
+                    icon: const Icon(Icons.timeline_rounded),
+                    label: const Text('Ver recorrido y horarios'),
+                  ),
                 ],
               ),
             ),
@@ -510,7 +525,11 @@ class _SentidoOption extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.arrow_forward_rounded, size: 18, color: selected ? EbColors.riverInk : EbColors.textMuted),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: selected ? EbColors.riverInk : EbColors.textMuted,
+                  ),
                   const SizedBox(width: EbSpacing.xs),
                   Flexible(
                     child: Text(
@@ -607,13 +626,19 @@ class _NearestCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Semantics(header: true, child: Text('Embarcaderos más cercanos', style: text.titleMedium)),
+                  child: Semantics(
+                    header: true,
+                    child: Text('Embarcaderos más cercanos', style: text.titleMedium),
+                  ),
                 ),
                 IconButton(
                   tooltip: 'Actualizar mi ubicación',
                   onPressed: locating ? null : onRefresh,
                   icon: locating
-                      ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
                       : const Icon(Icons.my_location_rounded, color: EbColors.userLocation),
                 ),
                 IconButton(tooltip: 'Cerrar', onPressed: onClose, icon: const Icon(Icons.close_rounded)),
@@ -628,7 +653,8 @@ class _NearestCard extends StatelessWidget {
                   style: text.bodySmall?.copyWith(color: EbColors.alertDelayInk),
                 ),
               ),
-            for (final c in nearest) _NearestRow(cercano: c, color: color, icon: icon, onTap: () => onTap(c.item)),
+            for (final c in nearest)
+              _NearestRow(cercano: c, color: color, icon: icon, onTap: () => onTap(c.item)),
             Padding(
               padding: const EdgeInsets.only(top: EbSpacing.xs, right: EbSpacing.s),
               child: Text('Distancia en línea recta. Tu ubicación no sale del teléfono.', style: muted),
@@ -733,7 +759,10 @@ class _PierSheet extends StatelessWidget {
               style: text.bodyMedium?.copyWith(color: EbColors.alertSuspended, fontWeight: FontWeight.w600),
             )
           else if (item.services.isEmpty)
-            Text('No hay salidas programadas desde aquí.', style: text.bodyMedium?.copyWith(color: EbColors.textMuted))
+            Text(
+              'No hay salidas programadas desde aquí.',
+              style: text.bodyMedium?.copyWith(color: EbColors.textMuted),
+            )
           else ...[
             Text('Próximo zarpe', style: text.titleSmall),
             const SizedBox(height: EbSpacing.xs),

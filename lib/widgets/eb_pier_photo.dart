@@ -48,7 +48,8 @@ class EbPierPhoto extends StatelessWidget {
                 imageUrl: fotoUrl,
                 fit: BoxFit.cover,
                 // No decodifica a más resolución que la pantalla
-                memCacheWidth: (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context)).round(),
+                memCacheWidth: (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context))
+                    .round(),
                 fadeInDuration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : EbDurations.normal,
                 placeholder: (_, _) => _Placeholder(embarcadero: e),
                 errorWidget: (_, _, _) => _Placeholder(embarcadero: e),
