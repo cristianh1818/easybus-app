@@ -16,6 +16,7 @@ import '../models/enums.dart';
 import '../providers/clock_provider.dart';
 import '../providers/data_providers.dart';
 import '../providers/errors.dart';
+import '../providers/history_providers.dart';
 import '../providers/piers_providers.dart';
 import '../theme/eb_insets.dart';
 import '../theme/eb_tokens.dart';
@@ -23,6 +24,7 @@ import '../theme/mode_style.dart';
 import '../utils/time_format.dart';
 import '../widgets/eb_async_view.dart';
 import '../widgets/eb_avisos_section.dart';
+import '../widgets/eb_favorite_button.dart';
 import '../widgets/eb_next_departure_row.dart';
 import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_wrap_text.dart';
@@ -68,7 +70,10 @@ class PierDetailScreen extends ConsumerWidget {
     final e = detalle.value?.data.embarcadero ?? embarcadero;
 
     return Scaffold(
-      appBar: AppBar(title: EbWrapText(style.stopLabel, maxLines: 1)),
+      appBar: AppBar(
+        title: EbWrapText(style.stopLabel, maxLines: 1),
+        actions: [EbFavoriteButton.pier(id: embarcadero.id, label: e.nombre)],
+      ),
       body: RefreshIndicator(
         color: EbColors.river,
         onRefresh: () => _refresh(ref),
@@ -76,6 +81,8 @@ class PierDetailScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: context.ebScrollPadding(top: EbSpacing.s),
           children: [
+            // "Tus últimas consultas" (solo en el teléfono)
+            _RecordVisit(embarcadero: embarcadero),
             _Header(embarcadero: e),
             const SizedBox(height: EbSpacing.m),
             // Avisos antes que los horarios: generales, de este embarcadero y de sus rutas
@@ -123,6 +130,31 @@ class PierDetailScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Registra la visita en "Tus últimas consultas" una vez, al abrir la pantalla.
+class _RecordVisit extends ConsumerStatefulWidget {
+  const _RecordVisit({required this.embarcadero});
+
+  final Embarcadero embarcadero;
+
+  @override
+  ConsumerState<_RecordVisit> createState() => _RecordVisitState();
+}
+
+class _RecordVisitState extends ConsumerState<_RecordVisit> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final e = widget.embarcadero;
+      ref.read(historyProvider.notifier).recordPier(id: e.id, nombre: e.nombre, referencia: e.referencia);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class _Header extends StatelessWidget {

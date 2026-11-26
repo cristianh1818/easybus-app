@@ -19,7 +19,8 @@ double distanciaMetros(GeoPoint a, GeoPoint b) {
   final dLat = rad(b.lat - a.lat);
   final dLng = rad(b.lng - a.lng);
   final h =
-      math.pow(math.sin(dLat / 2), 2) + math.cos(rad(a.lat)) * math.cos(rad(b.lat)) * math.pow(math.sin(dLng / 2), 2);
+      math.pow(math.sin(dLat / 2), 2) +
+      math.cos(rad(a.lat)) * math.cos(rad(b.lat)) * math.pow(math.sin(dLng / 2), 2);
   return 2 * _radioTierraM * math.asin(math.min(1, math.sqrt(h)));
 }
 

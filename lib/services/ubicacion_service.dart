@@ -61,7 +61,10 @@ class UbicacionService {
       final posicion = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high, timeLimit: _tiempoMaximo),
       );
-      return UbicacionObtenida(GeoPoint(posicion.latitude, posicion.longitude), precisionM: posicion.accuracy);
+      return UbicacionObtenida(
+        GeoPoint(posicion.latitude, posicion.longitude),
+        precisionM: posicion.accuracy,
+      );
     } on TimeoutException {
       return const UbicacionNoDisponible();
     } on LocationServiceDisabledException {

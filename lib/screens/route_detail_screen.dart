@@ -24,6 +24,7 @@ import '../models/ruta.dart';
 import '../providers/clock_provider.dart';
 import '../providers/data_providers.dart';
 import '../providers/errors.dart';
+import '../providers/history_providers.dart';
 import '../providers/piers_providers.dart';
 import '../repositories/fetched.dart';
 import '../theme/eb_insets.dart';
@@ -33,6 +34,7 @@ import '../utils/color_hex.dart';
 import '../utils/time_format.dart';
 import '../widgets/eb_async_view.dart';
 import '../widgets/eb_avisos_section.dart';
+import '../widgets/eb_favorite_button.dart';
 import '../widgets/eb_next_departure_row.dart';
 import '../widgets/eb_state_message.dart';
 import '../widgets/eb_wrap_text.dart';
@@ -72,6 +74,17 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
 
   final _map = EbRiverMapController();
 
+  @override
+  void initState() {
+    super.initState();
+    // "Tus últimas consultas" (solo en el teléfono)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final nombre = ref.read(rutaDetalleProvider(widget.rutaId)).value?.data.ruta.nombre;
+      ref.read(historyProvider.notifier).recordRoute(rutaId: widget.rutaId, codigo: widget.codigo, nombre: nombre);
+    });
+  }
+
   Future<void> _refresh() async {
     ref
       ..invalidate(rutaDetalleProvider(widget.rutaId))
@@ -100,7 +113,10 @@ class _RouteDetailScreenState extends ConsumerState<RouteDetailScreen> {
     final detalle = ref.watch(rutaDetalleProvider(widget.rutaId));
 
     return Scaffold(
-      appBar: AppBar(title: EbWrapText('Ruta ${widget.codigo}', maxLines: 1)),
+      appBar: AppBar(
+        title: EbWrapText('Ruta ${widget.codigo}', maxLines: 1),
+        actions: [EbFavoriteButton.route(id: widget.rutaId, label: 'Ruta ${widget.codigo}')],
+      ),
       body: RefreshIndicator(
         color: EbColors.river,
         onRefresh: _refresh,

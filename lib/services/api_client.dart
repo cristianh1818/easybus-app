@@ -85,6 +85,43 @@ class ApiClient {
     }
   }
 
+  /// POST, DELETE… (cuenta y favoritos). A diferencia de [get], nunca se reintenta
+  /// solo: repetir un POST podría crear algo dos veces. [token] va en la cabecera
+  /// Authorization y nunca se escribe en el registro.
+  Future<T> send<T>(
+    String method,
+    String path, {
+    Object? data,
+    String? token,
+    required JsonParser<T> parse,
+  }) async {
+    assert(path.startsWith('/'), 'La ruta debe empezar con "/": $path');
+    final Response<Object?> response;
+    try {
+      response = await _dio.request<Object?>(
+        path,
+        data: data,
+        options: Options(
+          method: method,
+          headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          contentType: data == null ? null : Headers.jsonContentType,
+        ),
+      );
+    } on DioException catch (e) {
+      throw mapDioException(e);
+    }
+    try {
+      return parse(response.data);
+    } on Object catch (e) {
+      debugPrint('[api] respuesta inesperada en $method $path: $e');
+      throw const ApiException(
+        kind: ApiErrorKind.invalidResponse,
+        code: 'RESPUESTA_INVALIDA',
+        message: 'La respuesta del servidor no tiene el formato esperado. Intenta más tarde.',
+      );
+    }
+  }
+
   void close() => _dio.close();
 
   static Map<String, Object?>? _withoutNulls(Map<String, Object?>? query) {

@@ -151,9 +151,7 @@ class CachedEasybusRepository implements EasybusRepository {
     } else if (key == ApiEndpoint.rutas().cacheKey && fresh is List<Ruta>) {
       final ids = {for (final r in fresh) r.id};
       await _cache.removeByPrefixExcept('ruta/', {for (final id in ids) 'ruta/$id'});
-      await _cache.removeWhereKey(
-        (key) => key.startsWith('horarios/') && !ids.contains(key.split('/')[1]),
-      );
+      await _cache.removeWhereKey((key) => key.startsWith('horarios/') && !ids.contains(key.split('/')[1]));
     }
   }
 
