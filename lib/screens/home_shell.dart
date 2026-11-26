@@ -150,7 +150,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               children: [
                 for (final (i, tab) in [
                   PiersScreen(mode: widget.mode),
-                  MapScreen(mode: widget.mode, onOpenPiers: () => _select(HomeTab.piers.index)),
+                  MapScreen(mode: widget.mode),
                   const AccountScreen(),
                 ].indexed)
                   // Las animaciones de las pestañas ocultas (pulso, flujo de la ruta) se pausan

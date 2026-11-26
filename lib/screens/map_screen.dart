@@ -1,6 +1,7 @@
 // Pestaña Mapa (mockup "Pantalla principal"): el río Sinú con los embarcaderos y las
-// rutas, ☰ arriba a la izquierda, chips de rutas arriba y la píldora
-// "¿A dónde quieres ir hoy?" sobre la barra inferior.
+// rutas, chips de rutas arriba y la píldora "¿A dónde quieres ir hoy?" sobre la
+// barra inferior: abre el planificador (Desde · Hacia) con la propuesta de viaje
+// calculada en el teléfono (domain/propuesta_viaje.dart).
 //
 // Los datos salen de la caché del teléfono (mapDataProvider), así que el mapa
 // funciona sin conexión; solo el fondo (teselas) necesita internet.
@@ -13,7 +14,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/cercanos.dart';
+import '../domain/propuesta_viaje.dart';
 import '../models/enums.dart';
+import '../models/geo.dart';
 import '../models/transport_mode.dart';
 import '../providers/map_providers.dart';
 import '../providers/piers_providers.dart';
@@ -27,17 +30,15 @@ import '../widgets/eb_menu_button.dart';
 import '../widgets/eb_next_departure_row.dart';
 import '../widgets/eb_pier_photo.dart';
 import '../widgets/eb_search_pill.dart';
+import '../widgets/eb_trip_panel.dart';
 import '../widgets/map/eb_river_map.dart';
 import 'pier_detail_screen.dart';
 import 'route_detail_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key, required this.mode, required this.onOpenPiers});
+  const MapScreen({super.key, required this.mode});
 
   final TransportMode mode;
-
-  /// Mientras no haya búsqueda de origen y destino, la píldora lleva a la lista.
-  final VoidCallback onOpenPiers;
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -53,6 +54,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   UbicacionObtenida? _user;
   bool _locating = false;
   bool _showNearest = false;
+
+  /// "¿A dónde quieres ir hoy?": panel abierto, origen y destino elegidos.
+  bool _planning = false;
+  PuntoViaje? _from;
+  PuntoViaje? _to;
+
+  /// Última propuesta encuadrada en el mapa (para no repetir el encuadre).
+  String? _fittedTrip;
+
+  /// Alto aproximado del panel del viaje, para encuadrar por encima de él.
+  static const _tripPanelSpace = 380.0;
 
   /// Alto de la píldora más su margen: lo que el mapa deja libre abajo.
   static const _pillSpace = 56.0 + EbSpacing.m;
@@ -72,34 +84,51 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   Future<void> _locate(List<PierListItem> items) async {
-    if (_locating) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final service = ref.read(ubicacionServiceProvider);
     if (items.isEmpty) {
-      _snack(messenger, 'Todavía se están cargando los embarcaderos. Intenta en un momento.');
+      _snack(
+        ScaffoldMessenger.of(context),
+        'Todavía se están cargando los embarcaderos. Intenta en un momento.',
+      );
       return;
     }
+    final result = await _obtainLocation(
+      sinPermiso: 'Sin el permiso no podemos mostrar los cercanos. El resto del mapa funciona igual.',
+      retry: () => _locate(items),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _user = result;
+      _showNearest = true;
+    });
+    final nearest = _nearest(items);
+    final padding = _overlayPadding(context);
+    _map.fit([
+      result.punto,
+      if (nearest.isNotEmpty) nearest.first.item.embarcadero.ubicacion,
+    ], padding: padding.copyWith(bottom: padding.bottom + _nearestCardSpace));
+  }
+
+  /// Pide la ubicación (solo al tocar) y explica qué hacer si no se pudo. La
+  /// ubicación no sale del teléfono.
+  Future<UbicacionObtenida?> _obtainLocation({
+    required String sinPermiso,
+    required VoidCallback retry,
+  }) async {
+    if (_locating) return null;
+    final messenger = ScaffoldMessenger.of(context);
+    final service = ref.read(ubicacionServiceProvider);
     setState(() => _locating = true);
     final result = await service.obtener();
-    if (!mounted) return;
+    if (!mounted) return null;
     setState(() => _locating = false);
 
     switch (result) {
       case UbicacionObtenida():
-        setState(() {
-          _user = result;
-          _showNearest = true;
-        });
-        final nearest = _nearest(items);
-        final padding = _overlayPadding(context);
-        _map.fit([
-          result.punto,
-          if (nearest.isNotEmpty) nearest.first.item.embarcadero.ubicacion,
-        ], padding: padding.copyWith(bottom: padding.bottom + _nearestCardSpace));
+        return result;
       case UbicacionApagada():
         _snack(
           messenger,
-          'La ubicación del teléfono está apagada. Actívala para ver los embarcaderos cercanos.',
+          'La ubicación del teléfono está apagada. Actívala o elige un embarcadero de la lista.',
           action: SnackBarAction(label: 'Activar', onPressed: service.abrirAjustesDeUbicacion),
         );
       case UbicacionSinPermiso(paraSiempre: true):
@@ -109,17 +138,121 @@ class _MapScreenState extends ConsumerState<MapScreen> {
           action: SnackBarAction(label: 'Ajustes', onPressed: service.abrirAjustesDeLaApp),
         );
       case UbicacionSinPermiso():
-        _snack(
-          messenger,
-          'Sin el permiso no podemos mostrar los cercanos. El resto del mapa funciona igual.',
-        );
+        _snack(messenger, sinPermiso);
       case UbicacionNoDisponible():
         _snack(
           messenger,
           'No se pudo obtener tu ubicación. Intenta de nuevo, mejor al aire libre.',
-          action: SnackBarAction(label: 'Reintentar', onPressed: () => _locate(items)),
+          action: SnackBarAction(label: 'Reintentar', onPressed: retry),
         );
     }
+    return null;
+  }
+
+  // ---- "¿A dónde quieres ir hoy?" ----
+
+  static const _tuUbicacion = 'Tu ubicación';
+
+  // Opciones especiales de las hojas de elegir (se reconocen por identidad)
+  static const _useLocation = PuntoViaje.punto(GeoPoint(0, 0), nombre: 'ubicacion');
+  static const _pickOnMap = PuntoViaje.punto(GeoPoint(0, 0), nombre: 'mapa');
+
+  void _startPlanning() {
+    setState(() {
+      _planning = true;
+      _showNearest = false;
+      // Si ya dio su ubicación, es el origen por defecto
+      if (_from == null && _user != null) _from = PuntoViaje.punto(_user!.punto, nombre: _tuUbicacion);
+    });
+  }
+
+  void _closePlanning() => setState(() {
+    _planning = false;
+    _from = null;
+    _to = null;
+    _fittedTrip = null;
+  });
+
+  List<({String nombre, String? detalle, bool cerrado, PuntoViaje? value})> _pierOptions(
+    List<PierListItem> items,
+  ) => [
+    for (final i in items)
+      (
+        nombre: i.embarcadero.nombre,
+        detalle: i.embarcadero.estaCerrado ? 'Cerrado temporalmente' : i.embarcadero.referencia,
+        cerrado: i.embarcadero.estaCerrado,
+        value: PuntoViaje.embarcadero(
+          i.embarcadero.id,
+          ubicacion: i.embarcadero.ubicacion,
+          nombre: i.embarcadero.nombre,
+        ),
+      ),
+  ];
+
+  Future<void> _pickFrom(List<PierListItem> items) async {
+    final chosen = await showTripEndpointPicker<PuntoViaje?>(
+      context,
+      title: '¿Desde dónde sales?',
+      special: (icon: Icons.my_location_rounded, label: 'Usar mi ubicación', value: _useLocation),
+      options: _pierOptions(items),
+    );
+    if (chosen == null || !mounted) return;
+    if (identical(chosen, _useLocation)) {
+      final loc = await _obtainLocation(
+        sinPermiso: 'Sin el permiso de ubicación, elige el embarcadero desde donde sales.',
+        retry: () => _pickFrom(items),
+      );
+      if (loc == null || !mounted) return;
+      setState(() {
+        _user = loc;
+        _from = PuntoViaje.punto(loc.punto, nombre: _tuUbicacion);
+      });
+    } else {
+      setState(() => _from = chosen);
+    }
+  }
+
+  Future<void> _pickTo(List<PierListItem> items) async {
+    final chosen = await showTripEndpointPicker<PuntoViaje?>(
+      context,
+      title: '¿A dónde vas?',
+      special: (icon: Icons.touch_app_rounded, label: 'Tocar el lugar en el mapa', value: _pickOnMap),
+      options: _pierOptions(items),
+    );
+    if (chosen == null || !mounted) return;
+    if (identical(chosen, _pickOnMap)) {
+      _snack(ScaffoldMessenger.of(context), 'Toca el mapa en el lugar al que quieres ir.');
+    } else {
+      setState(() => _to = chosen);
+    }
+  }
+
+  void _onMapTapForTrip(GeoPoint point) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    setState(() => _to = PuntoViaje.punto(point, nombre: 'Punto elegido en el mapa'));
+  }
+
+  void _swap() => setState(() {
+    final from = _from;
+    _from = _to;
+    _to = from;
+  });
+
+  /// Encuadra origen, subida, bajada y destino por encima del panel (una vez por propuesta).
+  void _fitTrip(PropuestaViaje p) {
+    final key = '${_from?.punto}-${_to?.punto}-${p.subida.embarcadero.id}-${p.bajada.embarcadero.id}';
+    if (_fittedTrip == key) return;
+    _fittedTrip = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final padding = _overlayPadding(context);
+      _map.fit([
+        if (_from case final f?) f.punto,
+        p.subida.embarcadero.ubicacion,
+        p.bajada.embarcadero.ubicacion,
+        if (_to case final t?) t.punto,
+      ], padding: padding.copyWith(bottom: MediaQuery.paddingOf(context).bottom + _tripPanelSpace));
+    });
   }
 
   void _snack(ScaffoldMessengerState messenger, String message, {SnackBarAction? action}) {
@@ -203,7 +336,18 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final selectedDir = selectedRoute == null
         ? null
         : (selectedRoute.direction(_sentido) ?? selectedRoute.directions.first);
-    final nearest = _showNearest ? _nearest(items) : const <Cercano<PierListItem>>[];
+    final nearest = _showNearest && !_planning ? _nearest(items) : const <Cercano<PierListItem>>[];
+
+    // Propuesta de viaje (calculada en el teléfono con las rutas guardadas)
+    final tripRoutes = _planning ? ref.watch(activeRouteDetailsProvider(widget.mode)) : null;
+    final propuesta = (_planning && _from != null && _to != null && tripRoutes?.value != null)
+        ? calcularPropuesta(rutas: tripRoutes!.value!, origen: _from!, destino: _to!)
+        : null;
+    if (propuesta != null) _fitTrip(propuesta);
+    final tripRoute = propuesta == null
+        ? null
+        : routes.where((r) => r.id == propuesta.ruta.ruta.id).firstOrNull;
+    final tripDir = tripRoute?.direction(propuesta!.sentido.sentido);
     // Encima de la píldora "¿A dónde quieres ir hoy?"
     final aboveTheBar = bottom + EbSpacing.m - EbBottomNav.bubbleOverflow + 56 + EbSpacing.m;
 
@@ -236,16 +380,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   color: _routeColor(r),
                 ),
             ],
-            selectedLine: selectedDir == null
+            selectedLine: tripDir != null
+                ? EbMapLine(
+                    id: '${tripRoute!.id}-${tripDir.sentido.name}',
+                    points: tripDir.points,
+                    color: _routeColor(tripRoute),
+                  )
+                : selectedDir == null
                 ? null
                 : EbMapLine(
                     id: '${selectedRoute!.id}-${selectedDir.sentido.name}',
                     points: selectedDir.points,
                     color: _routeColor(selectedRoute),
                   ),
-            selectedMarkerId: _pierId,
+            selectedMarkerId: _pierId ?? propuesta?.subida.embarcadero.id,
             userLocation: _user?.punto,
             userAccuracyM: _user?.precisionM,
+            destination: _planning && _to != null && _to!.embarcaderoId == null ? _to!.punto : null,
+            onMapTap: _planning ? _onMapTapForTrip : null,
             onMarkerTap: (id) {
               final item = items.where((i) => i.embarcadero.id == id).firstOrNull;
               if (item != null) _openPier(item);
@@ -292,33 +444,67 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             ),
           ),
         ),
-        if (nearest.isNotEmpty)
+        if (_planning)
           Positioned(
             left: EbSpacing.m,
             right: EbSpacing.m,
-            bottom: aboveTheBar,
-            child: _NearestCard(
-              nearest: nearest,
-              color: style.color,
-              icon: style.icon,
-              locating: _locating,
-              onTap: _openPier,
-              onRefresh: () => _locate(items),
-              onClose: () => setState(() => _showNearest = false),
+            bottom: bottom + EbSpacing.m - EbBottomNav.bubbleOverflow,
+            child: ConstrainedBox(
+              // En pantallas pequeñas el panel se desplaza y deja ver el mapa
+              constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.55),
+              child: SingleChildScrollView(
+                child: EbTripPanel(
+                  from: _from,
+                  to: _to,
+                  propuesta: propuesta,
+                  loading: tripRoutes?.value == null,
+                  onPickFrom: () => _pickFrom(items),
+                  onPickTo: () => _pickTo(items),
+                  onSwap: _swap,
+                  onClose: _closePlanning,
+                  onOpenRoute: (p) => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RouteDetailScreen(
+                        rutaId: p.ruta.ruta.id,
+                        codigo: p.ruta.ruta.codigo,
+                        initialSentido: p.sentido.sentido,
+                        highlightEmbarcaderoId: p.subida.embarcadero.id,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
           )
-        else
+        else ...[
+          if (nearest.isNotEmpty)
+            Positioned(
+              left: EbSpacing.m,
+              right: EbSpacing.m,
+              bottom: aboveTheBar,
+              child: _NearestCard(
+                nearest: nearest,
+                color: style.color,
+                icon: style.icon,
+                locating: _locating,
+                onTap: _openPier,
+                onRefresh: () => _locate(items),
+                onClose: () => setState(() => _showNearest = false),
+              ),
+            )
+          else
+            Positioned(
+              right: EbSpacing.m,
+              bottom: aboveTheBar,
+              child: _LocateButton(locating: _locating, onPressed: () => _locate(items)),
+            ),
           Positioned(
-            right: EbSpacing.m,
-            bottom: aboveTheBar,
-            child: _LocateButton(locating: _locating, onPressed: () => _locate(items)),
+            left: EbSpacing.l,
+            right: EbSpacing.l,
+            bottom: bottom + EbSpacing.m - EbBottomNav.bubbleOverflow,
+            child: Center(child: EbSearchPill(onTap: _startPlanning)),
           ),
-        Positioned(
-          left: EbSpacing.l,
-          right: EbSpacing.l,
-          bottom: bottom + EbSpacing.m - EbBottomNav.bubbleOverflow,
-          child: Center(child: EbSearchPill(onTap: widget.onOpenPiers)),
-        ),
+        ],
       ],
     );
   }

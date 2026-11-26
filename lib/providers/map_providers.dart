@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/enums.dart';
 import '../models/geo.dart';
+import '../models/ruta.dart';
 import '../models/transport_mode.dart';
 import 'data_providers.dart';
 import 'piers_providers.dart';
@@ -91,4 +92,14 @@ final mapDataProvider = FutureProvider.family<MapData, TransportMode>((ref, mode
     }
   }
   return MapData(overview: overview, routes: List.unmodifiable(routes));
+});
+
+/// Rutas activas del modo con sus sentidos y embarcaderos en orden (de la caché si
+/// no hay conexión). Base de "¿A dónde quieres ir hoy?".
+final activeRouteDetailsProvider = FutureProvider.family<List<RutaDetalle>, TransportMode>((ref, mode) async {
+  final rutas = (await ref.watch(rutasProvider.future)).data
+      .where((r) => r.mode == mode && r.estado == EstadoRuta.activa)
+      .toList();
+  final detalles = await Future.wait([for (final r in rutas) ref.watch(rutaDetalleProvider(r.id).future)]);
+  return [for (final d in detalles) d.data];
 });

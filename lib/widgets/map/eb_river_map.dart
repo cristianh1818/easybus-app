@@ -88,6 +88,7 @@ class EbRiverMap extends StatefulWidget {
     this.attributionPadding = EdgeInsets.zero,
     this.userLocation,
     this.userAccuracyM,
+    this.destination,
   });
 
   final EbRiverMapController controller;
@@ -115,6 +116,9 @@ class EbRiverMap extends StatefulWidget {
 
   /// Precisión de [userLocation] en metros: círculo claro alrededor del punto.
   final double? userAccuracyM;
+
+  /// Destino elegido tocando el mapa ("¿A dónde quieres ir hoy?"): un pin.
+  final GeoPoint? destination;
 
   @override
   State<EbRiverMap> createState() => _EbRiverMapState();
@@ -197,7 +201,10 @@ class _EbRiverMapState extends State<EbRiverMap> with TickerProviderStateMixin {
       // Si con ese encuadre dos embarcaderos quedan encimados, se acerca más (aunque
       // algún extremo quede fuera de la pantalla). Los que estén aún más juntos se
       // separan al hacer zoom con los dedos.
-      final zoom = math.max(fitted.zoom, math.min(_separationZoom(points, fitted.center.latitude), _maxSeparationZoom));
+      final zoom = math.max(
+        fitted.zoom,
+        math.min(_separationZoom(points, fitted.center.latitude), _maxSeparationZoom),
+      );
       controller.move(fitted.center, zoom);
     }
     if (_reduceMotion) {
@@ -362,6 +369,27 @@ class _EbRiverMapState extends State<EbRiverMap> with TickerProviderStateMixin {
               ),
           ],
         ),
+        if (widget.destination case final dest?)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _toLatLng(dest),
+                width: 44,
+                height: 44,
+                // La punta del pin queda sobre el punto
+                alignment: Alignment.topCenter,
+                child: Semantics(
+                  label: 'Tu destino',
+                  child: const Icon(
+                    Icons.location_on_rounded,
+                    size: 44,
+                    color: EbColors.navy,
+                    shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
+                  ),
+                ),
+              ),
+            ],
+          ),
         _Attribution(style: tiles, padding: widget.attributionPadding),
       ],
     );
@@ -509,7 +537,12 @@ class _SelectionRing extends StatelessWidget {
 /// blancas avanzan por la línea en el sentido del viaje. Con "reducir movimiento"
 /// aparece completa y las flechas quedan quietas (el sentido se sigue viendo).
 class _SelectedRouteLayer extends StatefulWidget {
-  const _SelectedRouteLayer({super.key, required this.points, required this.color, required this.reduceMotion});
+  const _SelectedRouteLayer({
+    super.key,
+    required this.points,
+    required this.color,
+    required this.reduceMotion,
+  });
 
   final List<LatLng> points;
   final Color color;
@@ -663,7 +696,10 @@ class _Attribution extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: EbColors.white.withValues(alpha: 0.85),
-            borderRadius: const BorderRadius.only(topLeft: Radius.circular(6), bottomLeft: Radius.circular(6)),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(6),
+              bottomLeft: Radius.circular(6),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,

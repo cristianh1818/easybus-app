@@ -94,11 +94,13 @@ void main() {
     handle.dispose();
   });
 
-  testWidgets('La píldora del mapa lleva a Embarcaderos', (tester) async {
+  testWidgets('La píldora del mapa abre "¿A dónde quieres ir hoy?" (Desde · Hacia)', (tester) async {
     await _pumpShell(tester);
     await tester.tap(find.text('¿A dónde quieres ir hoy?'));
     await tester.pumpAndSettle();
-    expect(tester.widget<IndexedStack>(find.byType(IndexedStack)).index, HomeTab.piers.index);
+    expect(tester.widget<IndexedStack>(find.byType(IndexedStack)).index, HomeTab.map.index);
+    expect(find.bySemanticsLabel(RegExp('^Desde')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('^Hacia')), findsOneWidget);
   });
 
   testWidgets('El ☰ abre el menú lateral con sus seis opciones', (tester) async {
