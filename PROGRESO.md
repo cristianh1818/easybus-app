@@ -1,6 +1,6 @@
 # Progreso de EASYBUS (fase 1: fluvial)
 
-Última actualización: 2026-11-26.
+Última actualización: 2026-11-26 (tareas 1 a 8 de la entrega final).
 
 ## App (`easybus_app`)
 
@@ -20,6 +20,12 @@
 | `846234d` | Foto del embarcadero en el detalle, con caché (`cached_network_image`) |
 | `0be8b6f` | PROGRESO.md con los datos nuevos de BS-1 |
 | `2e61e0a` | Mapa del río (parte 2): mi ubicación y los 3 embarcaderos más cercanos (calculado en el teléfono) |
+| `40c361b` | PROGRESO.md: tiempos de BS-1 a 20 km/h + 1 min por parada |
+| `f44604e` | Tarea 1 · Ajustes: foto con Hero y zoom, barra del sistema, un solo ☰, caché y actualizar |
+| `9a969e0` | Tarea 2 · Detalle de la ruta: línea del río, sentido, horas de paso y horarios |
+| `6253b58` | Tarea 3 · Mapa (parte 3): "¿A dónde quieres ir hoy?" con propuesta de viaje |
+| `c1af56b` | Tarea 4 · Cuenta del pasajero: sesión, favoritos y últimas consultas |
+| `4028a67` | Tarea 5 · Pulido: actualizar con onda de agua y pulso del zarpe a 5 min o menos |
 
 ## Backend (`easybus-backend`)
 
@@ -31,6 +37,52 @@
 | `ca6e01e` | Fotos de embarcaderos: subida desde el panel, WEBP sin EXIF, en `/uploads` |
 | `0b60a47` | Seed con los datos nuevos: BS-1 "Businú", 11 embarcaderos, 4 embarcaciones (sin BS-2) |
 | `9905a07` | Tiempos estimados a 20 km/h + 1 min por parada; 5 embarcaciones en el seed |
+| `f21275c` | Tarea 6 · Favoritos del pasajero: GET, POST y DELETE `/usuarios/me/favoritos` |
+| `7db4896` | Tarea 6 · README: guion de la demo de la entrega final (panel + app, 10 min) |
+| `807db31` | Tarea 7 · Despliegue en Azure: Dockerfile, `docker-compose.prod.yml` (API, PostGIS, Caddy con HTTPS, respaldo diario 7 días), `.env.production.example`, scripts para migrar la base y las fotos, `DESPLIEGUE.md` |
+
+Todo en la rama `entrega-final` de los dos repos (sin merge a `main`).
+
+## Servidor en Azure (tarea 7): preparado, falta ejecutarlo
+
+Los archivos y la guía están listos, pero **todavía no se ha desplegado** (no se entró a
+la VM). Seguir `DESPLIEGUE.md` del backend, pasos 1 a 10. Quedará en:
+
+- API: `https://easybus-unicordoba.northcentralus.cloudapp.azure.com/api/v1`
+- Panel: `https://easybus-unicordoba.northcentralus.cloudapp.azure.com/panel`
+
+Se ensayó todo el conjunto en el computador (Docker local, proyecto aparte y luego
+borrado): construcción de la imagen, HTTPS con Caddy, `/` → `/panel/`, HTTP → HTTPS,
+Swagger apagado (404), restauración de la base y las 11 fotos con los scripts, y el
+respaldo (`pg_dump` + fotos). Lo único que no se pudo ensayar es el certificado real de
+Let's Encrypt, que solo se obtiene en la VM.
+
+### APK que usa el servidor
+
+La app **no** agrega `/api/v1` sola: `API_BASE_URL` debe terminar en `/api/v1`. En
+release solo acepta HTTPS (`lib/config/app_config.dart`).
+
+```powershell
+# APK de release apuntando al servidor de Azure
+flutter build apk --release --dart-define=API_BASE_URL=https://easybus-unicordoba.northcentralus.cloudapp.azure.com/api/v1
+# Queda en build\app\outputs\flutter-apk\app-release.apk
+
+# O probar en el celular por USB contra el servidor (sin adb reverse)
+flutter run --dart-define=API_BASE_URL=https://easybus-unicordoba.northcentralus.cloudapp.azure.com/api/v1
+```
+
+Antes, comprobar que
+`https://easybus-unicordoba.northcentralus.cloudapp.azure.com/api/v1/health` responde `ok`.
+
+### APK de debug (tarea 8)
+
+- Compilada el 2026-11-26 con `flutter build apk --debug` (sin `--dart-define`).
+- Archivo: `C:\Users\HP\Desktop\easybus_app\build\app\outputs\flutter-apk\app-debug.apk`
+  (≈ 197 MB; no está en Git).
+- Usa la API local `http://localhost:3000/api/v1`: en el celular hace falta
+  `adb reverse tcp:3000 tcp:3000` y la API corriendo en el computador. Para una APK que
+  use el servidor de Azure, compilar la de release de arriba.
+- Instalar: `adb install -r build\app\outputs\flutter-apk\app-debug.apk`.
 
 ## Decisiones
 
@@ -76,6 +128,19 @@ Cuando se mida un viaje real, escribir esos minutos en el panel (quedan como "re
 estimados siguientes parten de ellos) o ajustar `VELOCIDAD_KMH` / `MINUTOS_POR_PARADA`
 en `src/rutas/tiempos-estimados.ts`.
 
+## Qué probar
+
+1. **APK de debug** en el celular (`adb install -r ...app-debug.apk`,
+   `adb reverse tcp:3000 tcp:3000`, API local encendida): Embarcaderos, detalle con foto
+   (Hero y zoom), detalle de la ruta, Mapa con "¿A dónde quieres ir hoy?", Cuenta (crear
+   cuenta, favoritos, últimas consultas), deslizar para actualizar (gota de agua) y el
+   pulso del chip cuando faltan 5 min o menos. Crear cuentas y favoritos escribe en la
+   base: no hacerlo contra la base real local `easybus`; usar la base de prueba o, ya
+   desplegado, el servidor.
+2. **Despliegue**: seguir `DESPLIEGUE.md`; al final, `/api/v1/health` ok, el panel con
+   candado válido y las fotos de los embarcaderos visibles.
+3. **APK de release** contra el servidor (ver arriba).
+
 ## Pendientes
 
 ### Backend / datos (desde el panel, para que quede en la auditoría)
@@ -86,12 +151,15 @@ en `src/rutas/tiempos-estimados.ts`.
 - Cargar los festivos de 2027: `GET /festivos?anio=2027` está vacío. Sin ellos, desde el
   1 de enero el backend y la app aplicarán horario laboral en los festivos.
 
+### Despliegue
+- Ejecutar `DESPLIEGUE.md` en la VM (pasos 1 a 10), incluida la migración de datos
+  (paso 9).
+- Compilar la APK de release con el servidor y probarla en el celular con datos móviles.
+- Crear un presupuesto con alerta en Azure (Administración de costos) y decidir si se
+  usa el apagado automático de la VM.
+- Unir `entrega-final` a `main` cuando el equipo lo apruebe (no se hizo merge).
+
 ### App
-- Detalle de la ruta con la línea del río (pantalla insignia).
-- Búsqueda de origen y destino (píldora "¿A dónde quieres ir hoy?"; hoy lleva a
-  Embarcaderos).
-- Cuenta: inicio de sesión opcional, favoritos y últimas consultas.
-- Pulido de easybus-motion pendiente: indicador de actualizar con onda de agua y pulso
-  del chip cuando faltan 5 minutos o menos.
+- "Continuar con Google", Notificaciones y Viaje seguro siguen como "Próximamente".
 - Logo en 1024 px o SVG del equipo: ya se usa el SVG oficial; revisar si hay versión más
   reciente.
