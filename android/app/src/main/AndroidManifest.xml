@@ -1,6 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Necesario para consultar la API (Flutter solo lo agrega en debug y profile) -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- "Cerca de mí" en el Mapa: solo mientras se usa la app (sin ubicación en
+         segundo plano). La ubicación no sale del teléfono. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
         android:label="EASYBUS"

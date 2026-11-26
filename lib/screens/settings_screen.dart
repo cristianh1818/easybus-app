@@ -52,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
             icon: Icons.toggle_on_outlined,
             title: 'Cómo activarla o desactivarla',
             body:
-                'La función "cerca de mí" llegará pronto. Cuando la uses por primera vez, el '
+                'Toca el botón de ubicación en la pestaña Mapa. La primera vez, el '
                 'teléfono te pedirá permiso y podrás aceptarlo o rechazarlo. Puedes cambiarlo '
                 'cuando quieras en los ajustes del teléfono: en Android, Aplicaciones › EASYBUS › '
                 'Permisos › Ubicación; en iPhone, Ajustes › EASYBUS › Ubicación. Sin el permiso, '

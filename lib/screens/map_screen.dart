@@ -4,14 +4,20 @@
 //
 // Los datos salen de la caché del teléfono (mapDataProvider), así que el mapa
 // funciona sin conexión; solo el fondo (teselas) necesita internet.
+//
+// "Mi ubicación" (abajo a la derecha): pide la ubicación solo al tocarlo, muestra el
+// punto azul y los 3 embarcaderos más cercanos. La distancia se calcula en el
+// teléfono; la ubicación no se envía ni se guarda.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/cercanos.dart';
 import '../models/enums.dart';
 import '../models/transport_mode.dart';
 import '../providers/map_providers.dart';
 import '../providers/piers_providers.dart';
+import '../services/ubicacion_service.dart';
 import '../theme/eb_tokens.dart';
 import '../theme/mode_style.dart';
 import '../widgets/eb_bottom_nav.dart';
@@ -39,8 +45,81 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Sentido _sentido = Sentido.ida;
   String? _pierId;
 
+  /// Ubicación del pasajero, solo en memoria mientras la pantalla está abierta.
+  UbicacionObtenida? _user;
+  bool _locating = false;
+  bool _showNearest = false;
+
   /// Alto de la píldora más su margen: lo que el mapa deja libre abajo.
   static const _pillSpace = 56.0 + EbSpacing.m;
+
+  /// Alto aproximado de la tarjeta de cercanos, para encuadrar por encima de ella.
+  static const _nearestCardSpace = 240.0;
+
+  List<Cercano<PierListItem>> _nearest(List<PierListItem> items) {
+    final user = _user;
+    if (user == null || items.isEmpty) return const [];
+    return masCercanos(
+      user.punto,
+      items,
+      ubicacion: (i) => i.embarcadero.ubicacion,
+      cerrado: (i) => i.embarcadero.estaCerrado,
+    );
+  }
+
+  Future<void> _locate(List<PierListItem> items) async {
+    if (_locating) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final service = ref.read(ubicacionServiceProvider);
+    if (items.isEmpty) {
+      _snack(messenger, 'Todavía se están cargando los embarcaderos. Intenta en un momento.');
+      return;
+    }
+    setState(() => _locating = true);
+    final result = await service.obtener();
+    if (!mounted) return;
+    setState(() => _locating = false);
+
+    switch (result) {
+      case UbicacionObtenida():
+        setState(() {
+          _user = result;
+          _showNearest = true;
+        });
+        final nearest = _nearest(items);
+        final padding = _overlayPadding(context);
+        _map.fit(
+          [result.punto, if (nearest.isNotEmpty) nearest.first.item.embarcadero.ubicacion],
+          padding: padding.copyWith(bottom: padding.bottom + _nearestCardSpace),
+        );
+      case UbicacionApagada():
+        _snack(
+          messenger,
+          'La ubicación del teléfono está apagada. Actívala para ver los embarcaderos cercanos.',
+          action: SnackBarAction(label: 'Activar', onPressed: service.abrirAjustesDeUbicacion),
+        );
+      case UbicacionSinPermiso(paraSiempre: true):
+        _snack(
+          messenger,
+          'EASYBUS no tiene permiso de ubicación. Puedes darlo en los ajustes del teléfono.',
+          action: SnackBarAction(label: 'Ajustes', onPressed: service.abrirAjustesDeLaApp),
+        );
+      case UbicacionSinPermiso():
+        _snack(messenger, 'Sin el permiso no podemos mostrar los cercanos. El resto del mapa funciona igual.');
+      case UbicacionNoDisponible():
+        _snack(
+          messenger,
+          'No se pudo obtener tu ubicación. Intenta de nuevo, mejor al aire libre.',
+          action: SnackBarAction(label: 'Reintentar', onPressed: () => _locate(items)),
+        );
+    }
+  }
+
+  void _snack(ScaffoldMessengerState messenger, String message, {SnackBarAction? action}) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message), action: action, behavior: SnackBarBehavior.floating));
+  }
 
   EdgeInsets _overlayPadding(BuildContext context) {
     final media = MediaQuery.paddingOf(context);
@@ -111,6 +190,9 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     final selectedDir = selectedRoute == null
         ? null
         : (selectedRoute.direction(_sentido) ?? selectedRoute.directions.first);
+    final nearest = _showNearest ? _nearest(items) : const <Cercano<PierListItem>>[];
+    // Encima de la píldora "¿A dónde quieres ir hoy?"
+    final aboveTheBar = bottom + EbSpacing.m - EbBottomNav.bubbleOverflow + 56 + EbSpacing.m;
 
     return Stack(
       children: [
@@ -147,6 +229,8 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     color: _routeColor(selectedRoute),
                   ),
             selectedMarkerId: _pierId,
+            userLocation: _user?.punto,
+            userAccuracyM: _user?.precisionM,
             onMarkerTap: (id) {
               final item = items.where((i) => i.embarcadero.id == id).firstOrNull;
               if (item != null) _openPier(item);
@@ -170,6 +254,27 @@ class _MapScreenState extends ConsumerState<MapScreen> {
             onRetry: () => ref.invalidate(mapDataProvider(widget.mode)),
           ),
         ),
+        if (nearest.isNotEmpty)
+          Positioned(
+            left: EbSpacing.m,
+            right: EbSpacing.m,
+            bottom: aboveTheBar,
+            child: _NearestCard(
+              nearest: nearest,
+              color: style.color,
+              icon: style.icon,
+              locating: _locating,
+              onTap: _openPier,
+              onRefresh: () => _locate(items),
+              onClose: () => setState(() => _showNearest = false),
+            ),
+          )
+        else
+          Positioned(
+            right: EbSpacing.m,
+            bottom: aboveTheBar,
+            child: _LocateButton(locating: _locating, onPressed: () => _locate(items)),
+          ),
         Positioned(
           left: EbSpacing.l,
           right: EbSpacing.l,
@@ -392,6 +497,174 @@ class _SentidoOption extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Botón redondo "Mi ubicación".
+class _LocateButton extends StatelessWidget {
+  const _LocateButton({required this.locating, required this.onPressed});
+
+  final bool locating;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: locating ? 'Buscando tu ubicación' : 'Mi ubicación: ver los embarcaderos más cercanos',
+      excludeSemantics: true,
+      child: Material(
+        color: EbColors.white,
+        elevation: 3,
+        shadowColor: Colors.black26,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: locating ? null : onPressed,
+          child: SizedBox.square(
+            dimension: 52,
+            child: Center(
+              child: locating
+                  ? const SizedBox.square(
+                      dimension: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.5, color: EbColors.userLocation),
+                    )
+                  : const Icon(Icons.my_location_rounded, color: EbColors.userLocation),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta con los embarcaderos más cercanos a la ubicación del pasajero.
+class _NearestCard extends StatelessWidget {
+  const _NearestCard({
+    required this.nearest,
+    required this.color,
+    required this.icon,
+    required this.locating,
+    required this.onTap,
+    required this.onRefresh,
+    required this.onClose,
+  });
+
+  final List<Cercano<PierListItem>> nearest;
+  final Color color;
+  final IconData icon;
+  final bool locating;
+  final ValueChanged<PierListItem> onTap;
+  final VoidCallback onRefresh;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final muted = text.bodySmall?.copyWith(color: EbColors.textMuted);
+    final far = nearest.first.metros > lejosDelRioM;
+
+    return Material(
+      color: EbColors.white,
+      elevation: 3,
+      shadowColor: Colors.black26,
+      borderRadius: BorderRadius.circular(EbRadius.card),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(EbSpacing.m, EbSpacing.xs, EbSpacing.xs, EbSpacing.s),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Semantics(header: true, child: Text('Embarcaderos más cercanos', style: text.titleMedium)),
+                ),
+                IconButton(
+                  tooltip: 'Actualizar mi ubicación',
+                  onPressed: locating ? null : onRefresh,
+                  icon: locating
+                      ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2.5))
+                      : const Icon(Icons.my_location_rounded, color: EbColors.userLocation),
+                ),
+                IconButton(tooltip: 'Cerrar', onPressed: onClose, icon: const Icon(Icons.close_rounded)),
+              ],
+            ),
+            if (far)
+              Padding(
+                padding: const EdgeInsets.only(right: EbSpacing.s, bottom: EbSpacing.xs),
+                child: Text(
+                  'Parece que estás lejos del río: el más cercano está a '
+                  '${formatoDistancia(nearest.first.metros)}.',
+                  style: text.bodySmall?.copyWith(color: EbColors.alertDelayInk),
+                ),
+              ),
+            for (final c in nearest) _NearestRow(cercano: c, color: color, icon: icon, onTap: () => onTap(c.item)),
+            Padding(
+              padding: const EdgeInsets.only(top: EbSpacing.xs, right: EbSpacing.s),
+              child: Text('Distancia en línea recta. Tu ubicación no sale del teléfono.', style: muted),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NearestRow extends StatelessWidget {
+  const _NearestRow({required this.cercano, required this.color, required this.icon, required this.onTap});
+
+  final Cercano<PierListItem> cercano;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final e = cercano.item.embarcadero;
+    final distancia = formatoDistancia(cercano.metros);
+    return Semantics(
+      button: true,
+      label: '${e.nombre}, a $distancia${e.estaCerrado ? ', cerrado temporalmente' : ''}',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(EbRadius.card - EbSpacing.xs),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: EbSizes.minTouch),
+          child: Padding(
+            padding: const EdgeInsets.only(right: EbSpacing.s),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 13,
+                  backgroundColor: e.estaCerrado ? EbColors.textMuted : color,
+                  child: Icon(icon, size: 15, color: EbColors.white),
+                ),
+                const SizedBox(width: EbSpacing.s),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(e.nombre, style: text.bodyLarge, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      if (e.estaCerrado)
+                        Text(
+                          'Cerrado temporalmente',
+                          style: text.bodySmall?.copyWith(color: EbColors.alertSuspended),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: EbSpacing.s),
+                Text(distancia, style: text.labelLarge?.copyWith(color: EbColors.riverInk)),
+              ],
             ),
           ),
         ),

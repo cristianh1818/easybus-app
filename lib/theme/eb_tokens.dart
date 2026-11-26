@@ -39,6 +39,10 @@ abstract final class EbColors {
   static const alertDelayTint = Color(0xFFFFF4E0);
   static const alertInfoTint = Color(0xFFE8F1FB);
   static const riverTint = Color(0xFFE6F4FA);
+
+  // "Estás aquí" en el mapa: azul convencional de ubicación, distinto del río
+  // (#1C8FBF) para no confundirse con un embarcadero.
+  static const userLocation = Color(0xFF1A73E8);
 }
 
 abstract final class EbSpacing {

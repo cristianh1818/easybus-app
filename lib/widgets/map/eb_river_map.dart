@@ -86,6 +86,8 @@ class EbRiverMap extends StatefulWidget {
     this.onMapTap,
     this.fitPadding = const EdgeInsets.all(48),
     this.attributionPadding = EdgeInsets.zero,
+    this.userLocation,
+    this.userAccuracyM,
   });
 
   final EbRiverMapController controller;
@@ -107,6 +109,12 @@ class EbRiverMap extends StatefulWidget {
 
   /// Dónde va la atribución del mapa (abajo a la derecha, por encima de esto).
   final EdgeInsets attributionPadding;
+
+  /// Ubicación del pasajero (punto azul), solo si la pidió con "Mi ubicación".
+  final GeoPoint? userLocation;
+
+  /// Precisión de [userLocation] en metros: círculo claro alrededor del punto.
+  final double? userAccuracyM;
 
   @override
   State<EbRiverMap> createState() => _EbRiverMapState();
@@ -310,6 +318,32 @@ class _EbRiverMapState extends State<EbRiverMap> with TickerProviderStateMixin {
             color: selected.color,
             reduceMotion: _reduceMotion,
           ),
+        // Ubicación del pasajero: debajo de los embarcaderos para no taparlos
+        if (widget.userLocation case final user?) ...[
+          if ((widget.userAccuracyM ?? 0) > 0)
+            CircleLayer(
+              circles: [
+                CircleMarker(
+                  point: _toLatLng(user),
+                  radius: widget.userAccuracyM!,
+                  useRadiusInMeter: true,
+                  color: EbColors.userLocation.withValues(alpha: 0.12),
+                  borderColor: EbColors.userLocation.withValues(alpha: 0.35),
+                  borderStrokeWidth: 1,
+                ),
+              ],
+            ),
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: _toLatLng(user),
+                width: _UserDot.size,
+                height: _UserDot.size,
+                child: const _UserDot(),
+              ),
+            ],
+          ),
+        ],
         MarkerLayer(
           markers: [
             for (final (i, m) in widget.markers.indexed)
@@ -345,6 +379,26 @@ class _EbRiverMapState extends State<EbRiverMap> with TickerProviderStateMixin {
 LatLng _toLatLng(GeoPoint p) => LatLng(p.lat, p.lng);
 
 List<LatLng> _toLatLngs(List<GeoPoint> points) => [for (final p in points) _toLatLng(p)];
+
+/// Punto azul de "estás aquí" (estilo habitual de los mapas, para que se reconozca).
+class _UserDot extends StatelessWidget {
+  const _UserDot();
+
+  static const size = 22.0;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Tu ubicación',
+    child: Container(
+      decoration: BoxDecoration(
+        color: EbColors.userLocation,
+        shape: BoxShape.circle,
+        border: Border.all(color: EbColors.white, width: 3),
+        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 1))],
+      ),
+    ),
+  );
+}
 
 class _PierMarker extends StatelessWidget {
   const _PierMarker({
